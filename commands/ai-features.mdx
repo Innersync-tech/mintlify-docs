@@ -20,11 +20,11 @@ Run a Grok-powered personal check-in. The command opens a three-field modal wher
 
 **Example:**
 
-```
+```text
 /growthcheckin
 ```
 
-*(A modal opens with three fields: **Goal**, **Obstacle**, and **Feeling**. Fill them in and submit to receive your coaching response.)*
+_(A modal opens with three fields: **Goal**, **Obstacle**, and **Feeling**. Fill them in and submit to receive your coaching response.)_
 
 #### How the response works
 
@@ -37,6 +37,7 @@ Run a Grok-powered personal check-in. The command opens a three-field modal wher
   </Step>
   <Step title="Choose how to share">
     After receiving your response, an optional share prompt appears (visible only to you):
+
     - **Share anonymously** — posts your check-in and Grok's response in the server's growth channel, without your name or avatar.
     - **Share with my name** — same embed, but includes your display name and avatar.
     - **Keep private** — dismisses the prompt; nothing is posted publicly.
@@ -65,7 +66,7 @@ Review your last 15 check-ins in a paginated embed (3 entries per page). Each en
 
 **Example:**
 
-```
+```text
 /growthhistory
 ```
 
@@ -89,13 +90,13 @@ Get a comprehensive, AI-generated explanation of any topic. Alphapy searches its
 
 **Example:**
 
-```
+```text
 /learn_topic topic:"position sizing in forex trading"
 /learn_topic topic:"how compound interest works"
 ```
 
 <Tip>
-  Be specific. "How does compound interest affect a $1,000 investment over 5 years?" returns a more useful response than just "compound interest."
+  Be specific. "How does compound interest affect a \$1,000 investment over 5 years?" returns a more useful response than just "compound interest."
 </Tip>
 
 ---
@@ -116,7 +117,7 @@ Generate ready-to-post social media captions using Grok. Provide a topic and an 
 
 **Examples:**
 
-```
+```text
 /create_caption topic:"morning mindset routine" style:"motivational"
 /create_caption topic:"our new trading course launch" style:"professional"
 ```
@@ -131,11 +132,11 @@ Get AI-powered leadership guidance for the challenges you're actually facing as 
 
 **Example:**
 
-```
+```text
 /leaderhelp
 ```
 
-*(Choose a challenge category from the view, or type your own question to receive tailored leadership guidance.)*
+_(Choose a challenge category from the view, or type your own question to receive tailored leadership guidance.)_
 
 ---
 
@@ -147,7 +148,7 @@ Test your forex risk management knowledge across three realistic trading scenari
 
 **Example:**
 
-```
+```text
 /lotquiz
 ```
 
@@ -167,7 +168,7 @@ Alphapy is designed to degrade gracefully when the Grok API is unreachable. Inst
     The embed includes an operator-facing detail string that gives more context — for example, whether credits have run out or the API key is missing.
   </Step>
   <Step title="Wait or escalate">
-    Rate limits typically resolve within minutes. For `offline` failures related to credentials or credits, contact your server's Innersync administrator.
+    Rate limits typically resolve within minutes. For `offline` failures related to credentials or credits, contact the Innersync-team.
   </Step>
 </Steps>
 
