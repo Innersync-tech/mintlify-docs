@@ -1,5 +1,5 @@
 ---
-title: "Authenticate Alphapy API Requests"
+title: "Alphapy API Authentication — JWT and API Key Guide"
 sidebarTitle: "Authentication"
 description: "Use a Supabase JWT token or API key to authenticate requests to the Alphapy REST API. Supabase JWT is the recommended method for dashboard integrations."
 ---
@@ -57,7 +57,11 @@ X-API-Key: <your-api-key>
 X-User-Id: <user-id>
 ```
 
-Both headers are required when using this method. Omitting `X-User-Id` will result in a missing authentication context error.
+Both headers are required when using this method. `X-User-Id` is used as a lookup hint to resolve which user the API key call relates to — it is **not** trusted for authentication or authorization. The API key itself is what grants access; `X-User-Id` only tells Alphapy which user record to look up. Omitting either header will result in a missing authentication context error.
+
+<Warning>
+  `X-User-Id` does not verify identity. Never rely on it as a security boundary. For user-scoped endpoints, always use Supabase JWT — user identity is derived exclusively from the verified JWT `sub` claim.
+</Warning>
 
 <CodeGroup>
 
@@ -99,11 +103,11 @@ curl -H "X-API-Key: <your-api-key>" \
 </Accordion>
 
 <Accordion title="Missing authentication context">
-  Alphapy received a request with neither an `Authorization` header nor an `X-User-Id` header. At least one must be present for the API to identify the caller.
+  Alphapy received a request with no recognisable authentication credentials. The API could not find a valid `Authorization` header or a complete API key credential set.
 
   **Fix:** Add one of the following to your request:
-  - `Authorization: Bearer <supabase-jwt>` for JWT auth, or
-  - Both `X-API-Key: <key>` and `X-User-Id: <user-id>` for API key auth.
+  - `Authorization: Bearer <supabase-jwt>` for JWT auth (recommended), or
+  - Both `X-API-Key: <key>` **and** `X-User-Id: <user-id>` for API key auth. Note that `X-User-Id` alone does not provide authentication — both headers are required together for the API key path.
 </Accordion>
 
 <Accordion title="JWT valid in your app but 401 in Alphapy">

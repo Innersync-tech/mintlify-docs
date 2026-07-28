@@ -1,13 +1,13 @@
 ---
-title: "Reminder Management REST API Reference"
+title: "Alphapy Reminders API — CRUD Endpoints Reference"
 sidebarTitle: "Reminders API"
-description: "CRUD endpoints for user reminders via the Alphapy REST API. Authenticated by Supabase JWT — only access your own reminders."
+description: "CRUD endpoints for managing user reminders via the Alphapy REST API. Authenticated by Supabase JWT — you can only access your own reminders."
 ---
 
 The Reminder Management API lets you create, read, update, and delete scheduled reminders for a user. Reminders can be one-off or recurring (repeating on specified days of the week), and they fire as Discord messages in a configured channel. All endpoints authenticate via Supabase JWT and enforce strict ownership — you can only access reminders that belong to your own user account.
 
 <Warning>
-  User identity is derived from the verified JWT claims only. The `user_id` path parameter and any `user_id` in the request body **must match** your JWT's `sub` claim (your Innersync UUID). Alphapy resolves that UUID to a Discord snowflake via `alphapy_discord_links` — if your Discord account is not linked, all reminder endpoints return `403` with guidance to run `/link` in Discord.
+  User identity is derived from the verified JWT claims only. The `user_id` path parameter and any `user_id` in the request body **must match** your JWT's `sub` claim (your Innersync UUID). Alphapy resolves that UUID to your linked Discord account — if your Discord account is not linked, all reminder endpoints return `403` with guidance to run `/link` in Discord.
 </Warning>
 
 ## Authentication

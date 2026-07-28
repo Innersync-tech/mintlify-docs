@@ -1,7 +1,7 @@
 ---
 title: "Moderation, Automod & Verification Commands"
 sidebarTitle: "Moderation"
-description: "Configure automod rules, AI-powered payment verification, onboarding flows, custom auto-responses, invite tracking, and GDPR compliance tools for your server."
+description: "Configure automod rules, AI-powered verification, onboarding flows, custom auto-responses, invite tracking, and GDPR compliance tools for your server."
 ---
 
 Alphapy gives server admins a comprehensive moderation toolkit — from rule-based auto-moderation and AI-powered payment verification to structured onboarding flows, dynamic custom commands, invite tracking, and built-in GDPR compliance tools. Each system is independently configurable so you can enable only what your community needs.
@@ -459,4 +459,31 @@ Post a GDPR agreement embed that members must accept before receiving a designat
 
 <Warning>
   Once posted, the GDPR embed is pinned to the channel. If you need to update the document, re-run `/gdpr post` — members will need to re-accept if you require ongoing consent.
+</Warning>
+
+---
+
+### `/delete_my_data`
+
+Permanently delete all personal data Alphapy holds for your Discord account. This is a self-service GDPR erasure tool — no admin action required.
+
+**Permissions:** Everyone (self-service)
+
+**Example:**
+
+```
+/delete_my_data
+```
+
+<Steps>
+  <Step title="Run /delete_my_data">
+    Alphapy shows a confirmation prompt so you can review what will be deleted before proceeding.
+  </Step>
+  <Step title="Confirm the deletion">
+    Click the confirmation button to permanently erase all user-scoped records associated with your account.
+  </Step>
+</Steps>
+
+<Warning>
+  This action **cannot be undone**. All your personal data stored by Alphapy — including your Innersync link, growth check-ins, reminders, and agent preferences — will be permanently removed.
 </Warning>

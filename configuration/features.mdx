@@ -1,5 +1,5 @@
 ---
-title: "Per-Feature Configuration Commands Reference"
+title: "Alphapy Per-Feature Configuration Commands Reference"
 sidebarTitle: "Feature Config"
 description: "Reference for all Alphapy per-feature configuration commands: system, reminders, automod, onboarding, verification, invites, GDPR, and engagement settings."
 ---
@@ -49,8 +49,8 @@ Alphapy is fully configurable on a per-server basis — every channel, role, and
   | Command | Description |
   |---------|-------------|
   | `/gpt show` | Display current AI settings. |
-  | `/gpt set_model [model-name]` | Set the AI model (e.g. `grok-3`). |
-  | `/gpt set_temperature [0.0–2.0]` | Set response creativity. Lower values (e.g. `0.2`) produce focused, factual replies; higher values (e.g. `1.2`) produce more varied responses. |
+  | `/gpt set_model [model-name]` | Set the AI model (e.g. `grok-3`). **Bot owner only.** |
+  | `/gpt set_temperature [0.0–2.0]` | Set response creativity. Lower values (e.g. `0.2`) produce focused, factual replies; higher values (e.g. `1.2`) produce more varied responses. Range is 0.0 to 2.0. |
 </Accordion>
 
 <Accordion title="Embed Watcher (/embedwatcher)">
@@ -179,6 +179,15 @@ Alphapy is fully configurable on a per-server basis — every channel, role, and
   | `/growth set_channel [#channel]` | Set the channel where community growth check-ins are shared. Omit the channel argument to clear it — the share option then disappears from `/growthcheckin`. |
 </Accordion>
 
+<Accordion title="FYI tips (/fyi)">
+  The FYI system posts contextual tips to the log channel when certain events occur (for example, the first time a member completes onboarding). Use `/fyi` to manually trigger or reset tips.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/fyi reset <key>` | Clear the flag for a tip so it will be sent again the next time its trigger fires. Key is chosen from a dropdown (e.g. `first_onboarding_done`, `first_guild_join`). |
+  | `/fyi send <key>` | Force-send a tip to the log channel immediately, regardless of whether it has already been sent. |
+</Accordion>
+
 <Accordion title="Agents (/config agents)">
   Personal agents give members a persistent AI companion. Toggle agents on or off per server with `/config agents`.
 
@@ -205,8 +214,12 @@ Each module has a single enabled flag. Disabling a module silences its member-fa
 | `custom_commands` | Message trigger replies |
 | `gpt` | `/create_caption`, `/learn_topic` |
 | `faq` | All `/faq` commands |
+| `rules` | Rule-acceptance panel in onboarding (questions-only path still works) |
+| `fyi` | Contextual FYI tip posts to the log channel |
 | `engagement` | All engagement features (master toggle combined with per-feature flags) |
 | `reminders` | `/add_reminder` and related reminder commands |
 | `automod` | All automod rules |
 | `onboarding` | Onboarding flow |
+| `invites` | Invite tracking and join-message posting |
+| `gdpr` | GDPR consent panel and role assignment |
 | `agents` | All `/agent` commands |

@@ -1,5 +1,5 @@
 ---
-title: "Agent Sessions REST API for App Integration"
+title: "Agent Sessions REST API — Alphapy App Integration"
 sidebarTitle: "Agents API"
 description: "Start, continue, and complete Alphapy agent sessions via REST API. Requires Supabase JWT authentication and a linked Discord account."
 ---
@@ -239,7 +239,7 @@ curl -X POST \
 
 ## POST /api/agents/sessions/{session_id}/complete
 
-End and archive an active session. This is the HTTP equivalent of `/agent end`. Alphapy generates a `session_insight_snapshot` summarising the session and emits a Hermit `gpt_command` event on success. Once completed, the session cannot receive new turns.
+End and archive an active session. This is the HTTP equivalent of `/agent end`. Alphapy generates a session summary on completion. Once completed, the session cannot receive new turns.
 
 <CodeGroup>
 ```bash cURL
@@ -273,8 +273,8 @@ curl -X POST \
   Total turns in the completed session.
 </ResponseField>
 
-<ResponseField name="session_insight_snapshot" type="object">
-  AI-generated summary and insight data for the session, stored for future context retrieval.
+<ResponseField name="summary" type="object">
+  AI-generated summary and insight data for the completed session, available for future context retrieval.
 </ResponseField>
 
 ### Example response
@@ -285,7 +285,7 @@ curl -X POST \
   "status": "completed",
   "completed_at": "2026-01-21T12:45:00Z",
   "turn_count": 8,
-  "session_insight_snapshot": {
+  "summary": {
     "summary": "User explored a fear of commitment around a career decision.",
     "themes": ["commitment", "career", "self-trust"]
   }

@@ -1,5 +1,5 @@
 ---
-title: "Alphapy REST API Overview & Getting Started"
+title: "Alphapy REST API Overview — Getting Started Guide"
 sidebarTitle: "Overview"
 description: "The Alphapy API provides HTTP endpoints for dashboard integration, agent sessions, health monitoring, reminder management, and webhook automation."
 ---
@@ -68,8 +68,10 @@ Use the `detail` field to understand what went wrong and how to fix it.
 | 201 | Created |
 | 400 | Bad request — check your request body or parameters |
 | 401 | Unauthorized — invalid or missing auth token |
+| 402 | Payment required — daily quota exceeded for your plan |
 | 403 | Forbidden — valid token but insufficient permissions |
 | 404 | Not found — the resource or endpoint does not exist |
+| 409 | Conflict — the resource already exists or a state constraint was violated |
 | 422 | Validation error — one or more parameter values are invalid |
 | 429 | Rate limited — you have exceeded the request limit for this endpoint type |
 | 503 | Service unavailable — a dependency (database, API key, migration) is not ready |
@@ -117,5 +119,40 @@ There is no URL-based versioning prefix (e.g. `/v1/`). Breaking changes are comm
     href="/api/health"
   >
     Query the health endpoint to check bot uptime, database connectivity, and LLM status.
+  </Card>
+  <Card
+    title="Metrics & Analytics"
+    icon="chart-bar"
+    href="/api/metrics"
+  >
+    Retrieve live dashboard metrics, LLM stats, and command usage analytics.
+  </Card>
+  <Card
+    title="Agent Sessions"
+    icon="robot"
+    href="/api/agents"
+  >
+    Start and manage guided reflection sessions via REST from any platform.
+  </Card>
+  <Card
+    title="Reminders"
+    icon="bell"
+    href="/api/reminders"
+  >
+    Create, read, update, and delete scheduled reminders for your account.
+  </Card>
+  <Card
+    title="Dashboard Config"
+    icon="sliders"
+    href="/api/dashboard"
+  >
+    Manage guild settings, onboarding flows, automod rules, and operational logs.
+  </Card>
+  <Card
+    title="Webhooks"
+    icon="webhook"
+    href="/api/webhooks"
+  >
+    Receive inbound events from Core API for subscriptions, links, and reflections.
   </Card>
 </CardGroup>

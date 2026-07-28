@@ -1,7 +1,7 @@
 ---
-title: "Inbound Webhook Events Reference for Alphapy"
+title: "Alphapy Inbound Webhook Events — Integration Reference"
 sidebarTitle: "Webhooks"
-description: "Configure inbound webhooks to notify Alphapy of subscription changes, Discord link events, and reflection shares. All webhooks use HMAC signature validation."
+description: "Inbound webhooks that notify Alphapy of subscription changes, Discord link events, and reflection shares. Requests are validated using HMAC signatures."
 ---
 
 Alphapy accepts inbound webhooks from the Innersync Core API, GitHub Actions, and other trusted services. These webhooks keep the bot in sync with external state changes — premium subscription updates, Discord account links, user reflection shares, and legal document changes — without polling. Each endpoint expects a JSON payload and validates the request using an HMAC-SHA256 signature header.
@@ -64,7 +64,7 @@ Always use `hmac.compare_digest` (Python) or `timingSafeEqual` (Node.js) — nev
 
 ## POST /webhooks/discord-link
 
-Triggered by Core API when a user links or unlinks their Discord account in the Innersync App. Alphapy upserts or removes the corresponding row in `alphapy_discord_links` and optionally sends the user a confirmation DM.
+Triggered by Core API when a user links or unlinks their Discord account in the Innersync App. Alphapy updates the Discord link record and optionally sends the user a confirmation DM.
 
 **Secret:** `DISCORD_LINK_WEBHOOK_SECRET`
 
@@ -142,12 +142,12 @@ curl -X POST https://your-bot-url/webhooks/discord-link \
 
 ## POST /webhooks/app-reflections
 
-Triggered when a user shares a reflection from the Innersync App via Core API. Alphapy stores the reflection in `app_reflections` (Railway) for use as Grok context in user-self flows such as `/growthcheckin` and `/agent journal_sync`. Reflection content is never used for ticket "Suggest reply" to preserve privacy.
+Triggered when a user shares a reflection from the Innersync App via Core API. Alphapy stores the reflection for use as Grok context in user-self flows such as `/growthcheckin` and `/agent journal_sync`. Reflection content is never used for ticket "Suggest reply" to preserve privacy.
 
 **Secret:** `APP_REFLECTIONS_WEBHOOK_SECRET`
 
 <Note>
-  Grok context only merges consent-gated sources. Railway `app_reflections` and Supabase `reflections_shared` both require an active, non-revoked row in `reflection_alphapy_consent` before they are included.
+  Grok context only merges consent-gated reflection sources. Consent must be actively granted by the user and not revoked for any reflection to be included.
 </Note>
 
 ### Payload
@@ -199,6 +199,74 @@ curl -X POST https://your-bot-url/webhooks/app-reflections \
 
 ```json
 { "status": "acknowledged", "reflection_id": "uuid-from-app" }
+```
+
+---
+
+## POST /webhooks/revoke-reflection
+
+Triggered by Core API when a user revokes their reflection consent in the Innersync App. Alphapy deletes the previously stored reflection so it is no longer used as Grok context.
+
+**Secret:** `APP_REFLECTIONS_WEBHOOK_SECRET`
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://your-bot-url/webhooks/revoke-reflection \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Signature: sha256=<computed_hmac>" \
+  -d '{
+    "user_id": 123456789,
+    "reflection_id": "uuid-from-app"
+  }'
+```
+</CodeGroup>
+
+### Payload
+
+```json
+{
+  "user_id": 123456789,
+  "reflection_id": "uuid-from-app"
+}
+```
+
+<ParamField body="user_id" type="number" required>
+  Discord snowflake for the user revoking consent.
+</ParamField>
+
+<ParamField body="reflection_id" type="string" required>
+  UUID of the reflection to delete, as originally assigned by the Innersync App.
+</ParamField>
+
+### Response
+
+```json
+{ "status": "deleted", "count": 1 }
+```
+
+`count` is `0` if no matching reflection row was found (already deleted or never stored).
+
+---
+
+## POST /webhooks/supabase/auth
+
+Supabase Auth lifecycle webhook. Alphapy uses this to sync user profile records and handle account cleanup workflows when auth events occur (e.g. user sign-up, deletion).
+
+**Secret:** Configured via `SUPABASE_WEBHOOK_SECRET` (optional in development).
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://your-bot-url/webhooks/supabase/auth \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Signature: sha256=<computed_hmac>" \
+  -d '{ "type": "INSERT", "table": "users", "record": { "id": "550e8400-e29b-41d4-a716-446655440000" } }'
+```
+</CodeGroup>
+
+### Response
+
+```json
+{ "status": "acknowledged" }
 ```
 
 ---

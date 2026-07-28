@@ -4,7 +4,7 @@ sidebarTitle: "Innersync ID"
 description: "Innersync ID links your Discord account to your Innersync profile, enabling personal agents, shared reflections, and cross-platform preferences."
 ---
 
-**Innersync ID** is your single user identity across the entire Innersync platform — the Alphapy Discord bot, the Innersync App dashboard, and the Core API. It is built on top of Supabase Auth, meaning one account follows you everywhere: your display name, avatar, preferences, and AI reflection history are consistent whether you are chatting in Discord or reviewing your journal in the App. The Discord link is optional, but unlocking it is what activates Alphapy's most powerful features.
+**Innersync ID** is your single user identity across the entire Innersync platform — the Alphapy Discord bot, the Innersync App dashboard, and the Core API. One account follows you everywhere: your display name, avatar, preferences, and AI reflection history are consistent whether you are chatting in Discord or reviewing your journal in the App. The Discord link is optional, but unlocking it is what activates Alphapy's most powerful features.
 
 ## Why link your account
 
@@ -61,14 +61,27 @@ Alphapy queries Core and returns your **display name**, **avatar**, and **Inners
 
 ## Core API profile endpoints
 
-The Core API exposes two public endpoints for reading and updating your global Innersync profile. Both require a valid Supabase JWT for authentication.
+The Core API exposes two public endpoints for reading and updating your global Innersync profile. Both require a valid user authentication token.
 
 | Endpoint | Purpose |
 |----------|---------|
 | `GET /users/me` | Read your global profile (the row is created automatically on first access) |
 | `PATCH /users/me` | Update your display name, avatar URL, and platform preferences |
 
-### Platform preferences
+## Discord link endpoints
+
+The following Core API endpoints power the Discord link flow. Service-to-service calls (used by Alphapy internally) require a service API key; user-facing calls require the signed-in user's auth token.
+
+| Endpoint | Auth | Purpose |
+|----------|------|---------|
+| `POST /integrations/discord/link-session` | Service API key | Start a link session; returns the App completion URL |
+| `GET /integrations/discord/bot-profile` | Service API key | Resolve a linked profile by Discord user ID |
+| `GET /integrations/discord/me` | User token | Check Discord link status for the signed-in user |
+| `POST /integrations/discord/link-session/complete` | User token | Finish the link after App sign-in |
+| `DELETE /integrations/discord/link` | User token | Unlink Discord from App settings |
+| `POST /integrations/discord/unlink` | Service API key | Unlink by Discord snowflake (used by `/unlink`) |
+
+## Profile preferences
 
 Your global profile includes a `preferences` object with the following structured cross-product keys:
 

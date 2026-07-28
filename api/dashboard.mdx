@@ -1,7 +1,7 @@
 ---
-title: "Dashboard Configuration API for Guild Management"
+title: "Alphapy Dashboard Configuration API — Guild Management"
 sidebarTitle: "Dashboard API"
-description: "HTTP endpoints for managing guild settings, onboarding, and automod rules via the Alphapy dashboard API. Requires Supabase JWT with guild admin permissions."
+description: "HTTP endpoints for managing guild settings, onboarding flows, and automod rules via the Alphapy dashboard API. Requires Supabase JWT and admin access."
 ---
 
 The Dashboard Configuration API is the backbone of the Mind web dashboard. It exposes endpoints for reading and writing guild-level settings, managing onboarding flows, creating automod rules, and querying operational logs. All endpoints require a Supabase JWT, and most require the authenticated user to have Discord admin permissions in the target guild. Write requests are rate-limited to **10 requests per minute** per IP.
@@ -22,14 +22,14 @@ Alphapy verifies the JWT, then checks that your linked Discord account holds adm
 
 ## Guild Settings
 
-### GET /api/dashboard/{guild_id}/settings
+### GET /api/dashboard/settings/{guild_id}
 
 Retrieve all configuration settings for a guild, organized by category.
 
 <CodeGroup>
 ```bash cURL
 curl -H "Authorization: Bearer <token>" \
-  https://your-bot-url/api/dashboard/123456789/settings
+  https://your-bot-url/api/dashboard/settings/123456789
 ```
 </CodeGroup>
 
@@ -112,13 +112,13 @@ The response is an object keyed by settings category. Each category contains its
 
 ---
 
-### PATCH /api/dashboard/{guild_id}/settings
+### POST /api/dashboard/settings/{guild_id}
 
 Update settings for one category within a guild. Supply the category name and a partial settings object containing only the fields you want to change.
 
 <CodeGroup>
 ```bash cURL
-curl -X POST https://your-bot-url/api/dashboard/123456789/settings \
+curl -X POST https://your-bot-url/api/dashboard/settings/123456789 \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
