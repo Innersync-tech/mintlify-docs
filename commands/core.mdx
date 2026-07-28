@@ -1,0 +1,372 @@
+---
+title: "Core Slash Commands: Utilities & Identity"
+sidebarTitle: "Core Commands"
+description: "Master Alphapy's core utilities — /sendto, /embed, /clean, /link, /profile, /faq, /innersync, /help, /commands, /version, and more."
+---
+
+Alphapy's core commands handle the everyday building blocks of running your server: sending formatted messages, managing your Innersync identity, browsing the FAQ, and checking bot health. Most utilities are admin-only, while identity and information commands are open to all members. Start here to get your server configured and to understand how Alphapy connects with the broader Innersync platform.
+
+---
+
+## Core Utilities
+
+These commands let admins send, format, and clean up messages directly from Discord.
+
+### `/sendto`
+
+Send a message to any channel without leaving your current one. Use `\n` to insert line breaks in your message.
+
+**Permissions:** Owner / Admin
+
+<ParamField path="channel" type="channel" required>
+  The destination channel for the message.
+</ParamField>
+
+<ParamField path="message" type="string" required>
+  The message content. Use `\n` to create new lines.
+</ParamField>
+
+**Example:**
+
+```
+/sendto channel:#announcements message:"Good morning everyone!\nDon't forget the call at 3 PM."
+```
+
+---
+
+### `/embed`
+
+Create and post a richly formatted embed to any channel. Running this command opens a modal where you fill in the embed's **title**, **description**, **footer**, and **color**.
+
+**Permissions:** Owner / Admin
+
+<ParamField path="channel" type="channel" required>
+  The channel where the embed will be posted.
+</ParamField>
+
+**Example:**
+
+```
+/embed channel:#welcome
+```
+
+*(A modal appears — fill in your title, description, footer text, and hex color, then submit.)*
+
+---
+
+### `/clean`
+
+Bulk-delete recent messages from the current channel. Discord limits bulk deletion to 100 messages at a time.
+
+**Permissions:** Owner / Admin
+
+<ParamField path="limit" type="integer" required>
+  Number of messages to delete. Maximum: **100**.
+</ParamField>
+
+**Example:**
+
+```
+/clean limit:50
+```
+
+<Warning>
+  Deleted messages cannot be recovered. Discord also prevents bulk deletion of messages older than 14 days.
+</Warning>
+
+---
+
+## Innersync Identity
+
+Alphapy is part of the broader Innersync ecosystem — the same account powers the Discord bot, the Innersync web app, and the Mind journaling experience. Linking your Discord account connects these surfaces so your data, growth history, and profile stay in sync.
+
+### `/link`
+
+Start a link session that connects your Discord account to your central Innersync user ID. Alphapy sends you an ephemeral message with a browser URL. Complete the flow in the Innersync app and you'll receive a confirmation DM from the bot.
+
+**Rate limit:** 3 uses per minute per user.
+
+**Permissions:** Everyone (ephemeral — only you see the response)
+
+**Example:**
+
+```
+/link
+```
+
+<Steps>
+  <Step title="Run /link in Discord">
+    Alphapy replies with a private link to the Innersync auth flow.
+  </Step>
+  <Step title="Complete the flow in your browser">
+    Sign in or create your Innersync account and approve the connection.
+  </Step>
+  <Step title="Receive your confirmation DM">
+    Alphapy DMs you once the link is established. You're now connected.
+  </Step>
+</Steps>
+
+---
+
+### `/unlink`
+
+Remove the stored mapping between your Discord account and your Innersync user ID. This does not delete your Innersync account — you can re-link at any time with `/link`.
+
+**Permissions:** Everyone (ephemeral)
+
+**Example:**
+
+```
+/unlink
+```
+
+---
+
+### `/profile`
+
+Display your Innersync profile fields — `display_name`, `avatar_url`, and your Innersync user ID — pulled live from Core. If Core is unreachable, the bot falls back to your Discord display name and shows whether an Alphapy/Supabase link exists.
+
+**Permissions:** Everyone (ephemeral)
+
+**Example:**
+
+```
+/profile
+```
+
+<Tip>
+  If `/profile` shows "not linked," run `/link` to connect your Discord account to Innersync and unlock features like `/growthhistory` and the reflection agent.
+</Tip>
+
+---
+
+## FAQ Commands
+
+The FAQ system lets you maintain a searchable knowledge base directly inside Discord. Admins manage entries; all members can browse and search.
+
+### `/faq list`
+
+Browse the 10 most recent FAQ entries in a paginated embed. Use the navigation buttons to page through older entries.
+
+<ParamField path="public" type="boolean">
+  Post the response in the channel instead of sending it as an ephemeral message. Default: `false`.
+</ParamField>
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/faq list
+/faq list public:true
+```
+
+---
+
+### `/faq view`
+
+View a single FAQ entry by its ID.
+
+<ParamField path="id" type="string" required>
+  The FAQ entry ID (visible in `/faq list`).
+</ParamField>
+
+<ParamField path="public" type="boolean">
+  Post the response in the channel. Default: `false`.
+</ParamField>
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/faq view id:42
+```
+
+---
+
+### `/faq search`
+
+Search FAQ entries by keywords. Returns up to 5 matching results.
+
+<ParamField path="query" type="string" required>
+  Your question or search keywords.
+</ParamField>
+
+<ParamField path="public" type="boolean">
+  Post the results in the channel. Default: `false`.
+</ParamField>
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/faq search query:"how to link my account"
+```
+
+---
+
+### `/faq add`
+
+Add a new FAQ entry. Opens a modal where you enter a **title**, **summary**, and optional **keywords** to improve search accuracy.
+
+**Permissions:** Owner / Admin
+
+**Example:**
+
+```
+/faq add
+```
+
+---
+
+### `/faq edit`
+
+Edit an existing FAQ entry by ID. Opens a pre-filled modal so you can update the title, summary, or keywords.
+
+<ParamField path="id" type="string" required>
+  The ID of the FAQ entry to edit.
+</ParamField>
+
+**Permissions:** Owner / Admin
+
+**Example:**
+
+```
+/faq edit id:42
+```
+
+---
+
+### `/faq reload`
+
+Reload the FAQ index. Run this after making bulk changes or importing entries to ensure search results are up to date.
+
+**Permissions:** Owner / Admin
+
+**Example:**
+
+```
+/faq reload
+```
+
+---
+
+## System Information
+
+Use these commands to check the bot's version, health, and available commands at any time.
+
+### `/innersync`
+
+Display an informational embed about Innersync and Alphapy, including links to the Core platform, App, and Pricing page. Only you see the response.
+
+**Permissions:** Everyone (ephemeral)
+
+**Example:**
+
+```
+/innersync
+```
+
+---
+
+### `/help`
+
+Get a curated quick-start guide for the most useful member commands: linking your account, daily growth check-ins, scheduling reminders, opening support tickets, and checking your premium status.
+
+**Permissions:** Everyone (ephemeral)
+
+**Example:**
+
+```
+/help
+```
+
+<Tip>
+  Share `/commands` with your members when they want a full list — it's more comprehensive than `/help`.
+</Tip>
+
+---
+
+### `/commands`
+
+List all available Alphapy commands grouped by category.
+
+<ParamField path="include_admin" type="boolean">
+  Include admin-only commands in the list. Default: `false`.
+</ParamField>
+
+<ParamField path="public" type="boolean">
+  Post the response in the channel so all members can see it. Default: `false`.
+</ParamField>
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/commands include_admin:true public:true
+```
+
+---
+
+### `/version`
+
+Display the current bot version and its codename (for example, `3.13.0 — Reflection Loop`).
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/version
+```
+
+---
+
+### `/release`
+
+Show the release notes for the currently running version, fetched from GitHub Releases. Falls back to the local `changelog.md` if GitHub is unreachable.
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/release
+```
+
+---
+
+### `/health`
+
+Show a full system status snapshot: database connectivity, module toggles (reminders, invites, GDPR), bot uptime, and optional memory/CPU metrics.
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/health
+```
+
+---
+
+### `/gptstatus`
+
+Check the live status of the Grok/LLM integration. The response includes API health, the active model, uptime, last success timestamp, rolling average latency, interaction counts, rate-limit hits, and total tokens used this session.
+
+Use this command whenever members report AI features showing "temporarily unavailable."
+
+**Permissions:** Everyone (full detail visible to admins)
+
+**Example:**
+
+```
+/gptstatus
+```
+
+<Note>
+  The `last_failure_kind` field in the `/gptstatus` embed tells you whether the AI is `offline` (credits, bad key, network error) or `rate_limited`. Use this to diagnose issues before contacting support.
+</Note>

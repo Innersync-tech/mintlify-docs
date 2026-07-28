@@ -1,0 +1,247 @@
+---
+title: "Schedule Reminders with Alphapy Discord Bot"
+sidebarTitle: "Reminders"
+description: "Set up recurring and one-off reminders, live session presets, and reminder configuration — image/banner reminders require a Premium subscription."
+---
+
+Alphapy's reminder system keeps your community on schedule without relying on external calendar tools. You can schedule recurring or one-off reminders for any channel, attach a specific message or pull content directly from an existing Discord embed, and create dedicated "live session" presets for regular streams or calls. Admins control server-wide settings — default channels, @everyone permissions, and module toggles — while individual members manage their own reminder schedules.
+
+---
+
+## Creating Reminders
+
+### `/add_reminder`
+
+Schedule a new reminder. You can write a message directly or point to an existing Discord message/embed to pull the details from automatically.
+
+**Permissions:** Everyone (manages own reminders); Owner / Admin (manage any reminder)
+
+<ParamField path="name" type="string" required>
+  A descriptive name for the reminder (used to identify it in `/reminder_list`).
+</ParamField>
+
+<ParamField path="time" type="string" required>
+  The time to send the reminder in **HH:MM** 24-hour format (e.g., `09:00`, `19:30`).
+</ParamField>
+
+<ParamField path="channel" type="channel">
+  The channel where the reminder will be posted. Uses the server's default reminder channel if not specified.
+</ParamField>
+
+<ParamField path="days" type="string">
+  Days of the week for recurring reminders, comma-separated (e.g., `"Monday, Wednesday, Friday"`). Omit to send on all days, or for a one-off reminder.
+</ParamField>
+
+<ParamField path="message" type="string">
+  The reminder message content.
+</ParamField>
+
+<ParamField path="location" type="string">
+  An optional event location string to include in the reminder.
+</ParamField>
+
+<ParamField path="message_link" type="string">
+  A Discord message URL. Alphapy parses the linked message or embed and uses its content as the reminder body. Use this to mirror an existing event announcement automatically.
+</ParamField>
+
+**Examples:**
+
+```
+/add_reminder name:"Weekly Standup" time:"09:00" days:"Monday, Wednesday, Friday" message:"Daily standup meeting — join the call!"
+
+/add_reminder name:"Friday Community Call" time:"19:30" days:"Friday" channel:#events message:"Community call is starting now 🎙️"
+
+/add_reminder name:"Event Mirror" time:"18:00" message_link:"https://discord.com/channels/123456789/987654321/111222333"
+```
+
+<Tip>
+  Use `message_link` when you've already posted an event announcement and want the reminder to echo that exact content — no need to retype it.
+</Tip>
+
+---
+
+## Managing Reminders
+
+### `/reminder_list`
+
+View all active reminders. Returns each reminder's ID, name, scheduled time, days, and target channel.
+
+<ParamField path="user" type="user">
+  View reminders belonging to a specific server member. **Admin only.**
+</ParamField>
+
+**Permissions:** Everyone (own reminders); Owner / Admin (any user)
+
+**Example:**
+
+```
+/reminder_list
+/reminder_list user:@ServerMember
+```
+
+---
+
+### `/reminder_edit`
+
+Edit an existing reminder via a pre-filled modal. All current values — name, time, days, message, and channel — are loaded automatically so you only change what you need.
+
+<ParamField path="reminder_id" type="string" required>
+  The ID of the reminder to edit (visible in `/reminder_list`).
+</ParamField>
+
+**Permissions:** Owner / Admin or the reminder's creator
+
+**Example:**
+
+```
+/reminder_edit reminder_id:7
+```
+
+*(A modal opens with the existing reminder details pre-filled. Update any field and submit.)*
+
+---
+
+### `/reminder_delete`
+
+Permanently delete a reminder by ID.
+
+<ParamField path="reminder_id" type="string" required>
+  The ID of the reminder to delete.
+</ParamField>
+
+**Permissions:** Owner / Admin or the reminder's creator
+
+**Example:**
+
+```
+/reminder_delete reminder_id:7
+```
+
+---
+
+## Live Session Presets
+
+Live session presets are a special type of recurring reminder optimised for regular streams, coaching calls, or live events. They use a fixed announcement message — "Live session starting now!" — and optionally display a banner image.
+
+### `/add_live_session`
+
+Create a recurring live session reminder. Supports an optional image banner (requires Premium).
+
+<ParamField path="days" type="string" required>
+  Days of the week for the session, comma-separated short names (e.g., `"mon,wed,fri"`).
+</ParamField>
+
+<ParamField path="time" type="string" required>
+  Session start time in **HH:MM** format.
+</ParamField>
+
+<ParamField path="channel" type="channel">
+  The channel for the announcement. Uses the server default if not set.
+</ParamField>
+
+<ParamField path="image_url" type="string">
+  A URL to a banner image for the reminder. **Premium required.**
+</ParamField>
+
+<ParamField path="image" type="attachment">
+  An image attachment to use as the banner. **Premium required.**
+</ParamField>
+
+**Example:**
+
+```
+/add_live_session days:"mon,wed,fri" time:"20:00" channel:#live-sessions
+/add_live_session days:"sat" time:"14:00" channel:#live-sessions image_url:"https://cdn.example.com/banner.png"
+```
+
+<Note>
+  Image and banner URLs on live session reminders require a **Premium subscription**. The session will be created without the image if you don't have Premium.
+</Note>
+
+---
+
+### `/edit_live_session`
+
+Update an existing live session preset. Only the fields you provide are changed — everything else stays the same.
+
+<ParamField path="live_session_id" type="string" required>
+  The ID of the live session preset to edit.
+</ParamField>
+
+<ParamField path="days" type="string">
+  New days of the week (e.g., `"mon,wed,fri"`).
+</ParamField>
+
+<ParamField path="time" type="string">
+  New session start time in **HH:MM** format.
+</ParamField>
+
+<ParamField path="channel" type="channel">
+  New target channel.
+</ParamField>
+
+<ParamField path="image_url" type="string">
+  New image URL. **Premium required.**
+</ParamField>
+
+<ParamField path="image" type="attachment">
+  New image attachment. **Premium required.**
+</ParamField>
+
+<ParamField path="clear_image" type="boolean">
+  Set to `true` to remove the current banner image entirely.
+</ParamField>
+
+**Permissions:** Owner / Admin
+
+**Example:**
+
+```
+/edit_live_session live_session_id:3 time:"21:00" days:"tue,thu"
+/edit_live_session live_session_id:3 clear_image:true
+```
+
+---
+
+### `/delete_live_session`
+
+Remove a live session preset permanently.
+
+<ParamField path="live_session_id" type="string" required>
+  The ID of the live session preset to delete.
+</ParamField>
+
+**Permissions:** Owner / Admin or the preset's creator
+
+**Example:**
+
+```
+/delete_live_session live_session_id:3
+```
+
+---
+
+## Configuration
+
+Admins control server-wide reminder settings through the `/reminders` command group.
+
+| Command | Description |
+|---|---|
+| `/reminders show` | Display the current reminder configuration for this server. |
+| `/reminders toggle true\|false` | Enable or disable the reminders module entirely. |
+| `/reminders set_default_channel #channel` | Set the default channel used when no channel is specified on a reminder. Leave the channel parameter empty to clear. |
+| `/reminders set_everyone true\|false` | Allow or block `@everyone` mentions inside reminder messages. |
+
+**Permissions:** Administrator (all `/reminders` configuration commands)
+
+**Examples:**
+
+```
+/reminders toggle true
+/reminders set_default_channel #reminders
+/reminders set_everyone false
+```
+
+<Note>
+  Image and banner URLs on all reminder types — both `/add_reminder` and `/add_live_session` — require a **Premium subscription**. Standard text reminders are available on all plans.
+</Note>

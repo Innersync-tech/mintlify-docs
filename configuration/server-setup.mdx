@@ -1,0 +1,72 @@
+---
+title: "First-Time Alphapy Server Setup Guide"
+sidebarTitle: "Server Setup"
+description: "Configure Alphapy for your Discord server step by step — set up logs, staff roles, ticketing, reminders, and run the interactive /config start wizard."
+---
+
+Every Discord server Alphapy joins starts with a clean slate — there are no shared defaults or automatic fallbacks. Before Alphapy can log moderation events, manage tickets, track invites, or fire reminders, you must explicitly point each feature at the right channels and roles. This guide walks you through first-time setup from start to finish, whether you prefer the interactive wizard or prefer to run commands manually.
+
+## Quick setup with the wizard
+
+The fastest way to get started is the `/config start` wizard. It walks you through every core setting one prompt at a time, letting you pick channels and roles from dropdowns or skip anything you want to configure later.
+
+<Steps>
+  <Step title="Run /config start">
+    Type `/config start` in any channel where Alphapy can read messages. The bot replies with an interactive prompt for each setting in sequence. All prompts are in English.
+  </Step>
+  <Step title="Choose your log channel">
+    Select the channel where Alphapy should post moderation logs, ticket events, and system notices — typically `#logs` or `#bot-logs`. You can skip and set this later with `/system set_log_channel`.
+  </Step>
+  <Step title="Choose your rules channel">
+    Select the channel that contains your server rules. Alphapy uses this for onboarding flows and rule-acceptance prompts — typically `#rules`. Skip to configure later with `/system set_rules_channel`.
+  </Step>
+  <Step title="Configure ticket category">
+    Select the Discord category where Alphapy should create private ticket channels. Tickets open as new channels inside this category. Skip to set later with `/ticketbot set_category`.
+  </Step>
+  <Step title="Set your staff role">
+    Select the role whose members can manage tickets and access moderation controls — typically `@Staff` or `@Moderator`. Skip to configure later with `/ticketbot set_staff_role`.
+  </Step>
+</Steps>
+
+<Tip>
+  You can re-run `/config start` at any time to update settings. It does not reset anything you previously configured — it just overwrites the values you change.
+</Tip>
+
+## Manual configuration
+
+If you prefer to set things up yourself — or want to configure features the wizard does not cover — run the following commands in your server. Each command is scoped to your server only and does not affect any other guild.
+
+```
+/system set_log_channel #logs
+/system set_rules_channel #rules
+/ticketbot set_staff_role @Staff
+/ticketbot set_category #Tickets
+/reminders toggle true
+/reminders set_default_channel #announcements
+```
+
+For a full list of commands per feature, see [Feature Configuration Reference](/configuration/features).
+
+## Configuration scopes
+
+Alphapy's settings are organised into feature groups, each with its own top-level command. Run `/<scope> show` at any time to see the current settings for that feature, or `/config scopes` to list all registered scopes.
+
+| Feature | Command group |
+|---------|---------------|
+| System settings | `/system` |
+| Reminders | `/reminders` |
+| Tickets | `/ticketbot` |
+| Moderation | `/automod` |
+| Onboarding | `/onboarding` |
+| Verification | `/verification` |
+| AI / Grok | `/gpt` |
+| Invites | `/invites` |
+| GDPR consent | `/gdpr` |
+| Engagement | `/engagement` |
+| Embed watcher | `/embedwatcher` |
+| Growth check-ins | `/growth` |
+| Agents | `/config agents` |
+
+<Note>
+  All configuration commands require **Administrator** permissions. Regular members and moderators cannot change server settings.
+</Note>

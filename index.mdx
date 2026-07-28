@@ -1,20 +1,44 @@
 ---
-title: "Introduction"
-description: "Welcome to your project"
+title: "Innersync • Alphapy Documentation"
+sidebarTitle: "Home"
+description: "Official documentation for Alphapy, the AI-powered Discord bot for community management, growth check-ins, and personal reflection agents."
 ---
 
-Write a short description of your product here. What it does, who it's for, and what they can accomplish with it.
+Welcome to the official documentation for **Innersync • Alphapy** — the multi-guild Discord bot built to power your community's growth, well-being, and day-to-day operations. Whether you are a server admin looking to set up moderation and ticketing, or a member wanting to explore AI-powered reflection agents, this documentation covers everything you need to get started and go further.
 
-<Tip>
-  Ready to make this your own? Start by editing this page. Update your `docs.json` file to customize your site. Then fill out the [Quickstart](/quickstart) page.
-</Tip>
+<CardGroup cols={2}>
+  <Card title="Introduction" icon="book-open" href="/introduction">
+    Learn what Alphapy does and how its features work together to power your Discord community.
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Add Alphapy to your server and complete first-time setup in under 10 minutes.
+  </Card>
+  <Card title="Bot Commands" icon="slash" href="/commands/core">
+    Browse the full slash command reference — from configuration to AI features and agents.
+  </Card>
+  <Card title="Alphapy Agents" icon="robot" href="/agents/overview">
+    Explore AI-powered personal reflection agents available to linked community members.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Integrate with the Alphapy HTTP API for dashboard builds, webhooks, and automations.
+  </Card>
+  <Card title="Premium" icon="star" href="/premium/plans">
+    Unlock unlimited AI check-ins, advanced automod rules, image reminders, and more.
+  </Card>
+</CardGroup>
 
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  This card links to the quickstart page in your project.
-</Card>
-<Card title="Components" icon="puzzle-piece" href="https://mintlify.com/docs/components">
-  Add cards, callouts, steps, tabs, and more to design and structure your pages.
-</Card>
-<Card title="Settings" icon="gear" href="https://mintlify.com/docs/organize/settings">
-  Set your site name, branding, and navigation in the `docs.json` file.
-</Card>
+## Get up and running
+
+Follow these three steps to go from zero to a fully configured Alphapy server.
+
+<Steps>
+  <Step title="Add Alphapy to your server">
+    Visit [pricing.alphapy.innersync.tech](https://pricing.alphapy.innersync.tech) and click the **Add to Discord** invite link. Authorize the bot with the requested permissions — Alphapy needs `Manage Channels`, `Manage Roles`, `Send Messages`, `Read Message History`, and `Moderate Members` to operate all features.
+  </Step>
+  <Step title="Run the setup wizard">
+    Once Alphapy is in your server, run `/config start` in any channel you have admin access to. The interactive wizard walks you through every major setting — log channel, rules channel, onboarding flow, ticket category, and staff role — one step at a time. Click **Skip** on any step you want to configure later.
+  </Step>
+  <Step title="Link your Innersync account">
+    Run `/link` to connect your Discord account to your Innersync ID. This unlocks the AI reflection agents (`/agent`) and syncs your profile across the Alphapy bot, the Innersync App dashboard, and Core. Members can each run `/link` independently from within your server.
+  </Step>
+</Steps>

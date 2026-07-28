@@ -1,47 +1,129 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Alphapy on Your Discord Server"
+sidebarTitle: "Quickstart"
+description: "Add Alphapy to your Discord server and complete first-time setup in under 10 minutes using the interactive configuration wizard."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+Getting Alphapy running on your Discord server takes less than 10 minutes. This guide walks you through inviting the bot, completing the interactive setup wizard, configuring essential features, linking your Innersync account, and sending your first AI-powered growth check-in. Follow each step in order and you will have a fully operational server by the end.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Invite Alphapy">
+    Visit [pricing.alphapy.innersync.tech](https://pricing.alphapy.innersync.tech) and click the **Add to Discord** invite link. Select your server from the dropdown and click **Authorise**.
 
-    ```bash
-    npm install your-package
-    ```
+    Alphapy requires the following Discord permissions to operate all features:
+
+    | Permission | Why it's needed |
+    |------------|-----------------|
+    | Manage Channels | Creates ticket and verification channels |
+    | Manage Roles | Assigns onboarding, verified, and badge roles |
+    | Send Messages / Embed Links | Posts reminders, check-ins, and log embeds |
+    | Read Message History | Monitors channels for embed-watcher and challenges |
+    | Moderate Members | Executes automod timeout and mute actions |
+
+    <Tip>
+      You must have the **Manage Server** permission in the target Discord server to complete the authorisation flow.
+    </Tip>
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
+  <Step title="Run the setup wizard">
+    In any channel where you have admin access, run:
+
     ```
+    /config start
+    ```
+
+    The interactive wizard guides you through the core settings one at a time. For each step, select your desired channel or role from the dropdown, then click **Next** to advance. Click **Skip** on any step you want to revisit later.
+
+    The wizard covers:
+
+    - **Log channel** — where Alphapy posts moderation events, join/leave notices, and system alerts
+    - **Rules channel** — the channel members are directed to during onboarding
+    - **Onboarding** — toggle on/off and set your onboarding mode (rules only, questions only, or both)
+    - **Ticket category** — the Discord category where private ticket channels are created
+    - **Staff role** — the role granted access to all ticket channels
+
+    <Note>
+      You can re-run `/config start` at any time to update these settings. Each feature also has its own top-level command group (e.g. `/automod`, `/onboarding`, `/verification`) for granular control.
+    </Note>
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
 
-    ```bash
-    your-cli start
+  <Step title="Configure key features">
+    After the wizard, run these commands to activate the most commonly used features:
+
+    **Set your log channel** (if you skipped it in the wizard):
+
     ```
+    /system set_log_channel #logs
+    ```
+
+    **Enable reminders** so members and admins can schedule recurring announcements:
+
+    ```
+    /reminders toggle true
+    ```
+
+    **Assign your staff role** so ticket channels are visible to your moderation team:
+
+    ```
+    /ticketbot set_staff_role @Staff
+    ```
+
+    Run `/system show`, `/reminders show`, and `/ticketbot show` at any point to review your current settings for each feature area.
+  </Step>
+
+  <Step title="Link your Innersync account">
+    Run `/link` in any channel on your server (or in DMs with Alphapy). The bot replies with an **ephemeral** message — visible only to you — containing a personalised browser URL.
+
+    ```
+    /link
+    ```
+
+    Open the URL in your browser and sign in to the Innersync App (or create a free account). Once you complete the flow, Core sends a confirmation **DM** to your Discord account and updates Alphapy automatically. The entire linking process typically takes under a minute.
+
+    Linking your account unlocks:
+    - `/agent` commands — personal multi-turn AI reflection sessions
+    - Your global Innersync profile (display name, avatar) visible via `/profile`
+    - Cross-platform preferences (locale, timezone) shared between the App and Alphapy
+
+    <Tip>
+      Encourage your members to run `/link` as well — each person links their own Discord account individually, and it only takes about 60 seconds.
+    </Tip>
+  </Step>
+
+  <Step title="Try your first growth check-in">
+    Run the following command in any channel where Alphapy is active:
+
+    ```
+    /growthcheckin
+    ```
+
+    A modal opens with three fields: **goal**, **obstacle**, and **feeling**. Fill them in and submit. Grok reads your response and replies with personalised coaching feedback. If you have previous check-ins, Grok actively references patterns and progress across your history.
+
+    After the response, an optional share prompt appears:
+
+    - **Share anonymously** — posts your check-in and Grok's response as an embed in the configured growth channel, without your name or avatar
+    - **Share with my name** — same embed, with your display name and avatar attached
+    - **Keep private** — dismisses the prompt
+
+    <Note>
+      The share option only appears if an admin has configured a growth channel using `/growth set_channel #channel`. All sharing is opt-in per interaction.
+    </Note>
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## Next steps
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>
+<CardGroup cols={2}>
+  <Card title="Bot Commands" icon="slash" href="/commands/core">
+    Explore the complete slash command reference, including moderation, engagement, AI, and admin commands.
+  </Card>
+  <Card title="Alphapy Agents" icon="robot" href="/agents/overview">
+    Learn how to enable and use the multi-turn personal reflection agents for linked members.
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/configuration">
+    Deep-dive into per-feature settings for automod, onboarding, verification, reminders, and more.
+  </Card>
+  <Card title="Premium" icon="star" href="/premium/plans">
+    Compare tiers and unlock unlimited AI usage, advanced automod rules, and premium engagement tools.
+  </Card>
+</CardGroup>

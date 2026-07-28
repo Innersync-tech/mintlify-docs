@@ -1,0 +1,89 @@
+---
+title: "Innersync ID: Your Unified Cross-Platform Identity"
+sidebarTitle: "Innersync ID"
+description: "Innersync ID links your Discord account to your Innersync profile, enabling personal agents, shared reflections, and cross-platform preferences."
+---
+
+**Innersync ID** is your single user identity across the entire Innersync platform — the Alphapy Discord bot, the Innersync App dashboard, and the Core API. It is built on top of Supabase Auth, meaning one account follows you everywhere: your display name, avatar, preferences, and AI reflection history are consistent whether you are chatting in Discord or reviewing your journal in the App. The Discord link is optional, but unlocking it is what activates Alphapy's most powerful features.
+
+## Why link your account
+
+Linking your Discord account to your Innersync ID turns Alphapy from a community tool into a personal growth companion. Here is what becomes available once you complete the link:
+
+- **`/agent` commands** — start multi-turn personal reflection sessions powered by Grok. The agent draws on your opt-in shared reflections and learned patterns to give contextually aware responses across sessions.
+- **Cross-platform profile** — your Innersync display name and avatar appear in `/profile` and in any shared growth check-in embeds posted to your community channel, replacing your raw Discord username.
+- **Shared reflections** — growth check-ins you choose to share from Alphapy can be surfaced in the App (and vice versa), giving you a unified view of your reflection history without exposing encrypted journal data.
+- **Platform preferences** — set your locale, timezone, and marketing preferences once in your Innersync profile and have them apply across all Innersync services automatically.
+
+## Linking your Discord account
+
+<Steps>
+  <Step title="Run /link in Discord">
+    In any channel where Alphapy is active — or in a DM with the bot — run:
+
+    ```
+    /link
+    ```
+
+    Alphapy calls Core to create a secure link session and replies with an **ephemeral** message (visible only to you) containing a personalised browser URL. Copy or click that URL to continue.
+  </Step>
+
+  <Step title="Complete the flow in the Innersync App">
+    Open the URL in your browser. You will be taken to the Innersync App at `/dashboard/settings/integrations/link`. Sign in to your existing Innersync account or create a new one for free. Once you authenticate, the App calls Core to complete the link and bind your Discord snowflake to your Innersync user ID.
+  </Step>
+
+  <Step title="Receive your confirmation DM">
+    After the link is confirmed, Core sends a signed webhook to Alphapy, which immediately sends you a **direct message** confirming the link was successful. Your Innersync display name, avatar, and user ID are now accessible in Alphapy. Run `/profile` to verify the connection.
+  </Step>
+</Steps>
+
+## Managing your link
+
+### Unlinking
+
+To remove the connection between your Discord account and your Innersync ID, run:
+
+```
+/unlink
+```
+
+This removes the stored mapping in Alphapy for your Discord account. Your Innersync account itself is unaffected — all your reflections, preferences, and profile data remain intact. You can re-link at any time by running `/link` again.
+
+### Viewing your profile
+
+To see your linked Innersync profile details, run:
+
+```
+/profile
+```
+
+Alphapy queries Core and returns your **display name**, **avatar**, and **Innersync user ID** as an ephemeral embed. If Core is temporarily unavailable, the command falls back to showing your Discord display name and confirming whether an Alphapy link record exists locally.
+
+## Core API profile endpoints
+
+The Core API exposes two public endpoints for reading and updating your global Innersync profile. Both require a valid Supabase JWT for authentication.
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /users/me` | Read your global profile (the row is created automatically on first access) |
+| `PATCH /users/me` | Update your display name, avatar URL, and platform preferences |
+
+### Platform preferences
+
+Your global profile includes a `preferences` object with the following structured cross-product keys:
+
+| Key | Type | Values / Notes |
+|-----|------|----------------|
+| `locale` | string | `nl-BE` or `en` |
+| `timezone` | string | Any valid IANA timezone string (validated server-side) |
+| `marketing_opt_in` | boolean | Opt in or out of Innersync platform marketing |
+
+When you `PATCH /users/me`, Core **validates** known keys and **shallow-merges** your changes into the existing preferences object — any keys you do not include are preserved unchanged. Submitting an invalid `locale` or `timezone` value returns a `422` error.
+
+<Info>
+  Product-specific settings — such as App encryption preferences or agent memory options — live in separate settings layers, not in the global preferences object. Update those from within the relevant product's settings interface.
+</Info>
+
+<Note>
+  `/link` is rate-limited to **3 uses per minute per user**. If you hit the limit, wait 60 seconds before trying again. This limit applies per Discord user across all servers.
+</Note>

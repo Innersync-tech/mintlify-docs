@@ -1,0 +1,176 @@
+---
+title: "AI-Powered Growth Commands in Alphapy"
+sidebarTitle: "AI Features"
+description: "Use /growthcheckin, /growthhistory, /learn_topic, /create_caption, /leaderhelp, and /lotquiz to bring Grok-powered coaching into your Discord server."
+---
+
+Alphapy integrates Grok — xAI's large language model — into several commands that turn your Discord server into an active coaching and learning environment. Members can log daily check-ins, explore topics with AI-generated explanations, generate social content, get leadership guidance, and test their knowledge — all without leaving Discord. This page covers every AI-powered command, how to configure them, and what happens when the AI is temporarily unavailable.
+
+---
+
+## Growth Check-ins
+
+### `/growthcheckin`
+
+Run a Grok-powered personal check-in. The command opens a three-field modal where you reflect on your current goal, the obstacle you're facing, and how you're feeling. Grok reads your input — plus any previous check-ins it can reference — and responds with personalised coaching feedback.
+
+**Cooldown:** 2 uses per 5 minutes per user per guild.
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/growthcheckin
+```
+
+*(A modal opens with three fields: **Goal**, **Obstacle**, and **Feeling**. Fill them in and submit to receive your coaching response.)*
+
+#### How the response works
+
+<Steps>
+  <Step title="Submit the modal">
+    Enter your goal, current obstacle, and emotional state, then click **Submit**.
+  </Step>
+  <Step title="Grok analyses your entry">
+    If you have previous check-ins, Grok references patterns and progress it has observed over time to make the response more relevant.
+  </Step>
+  <Step title="Choose how to share">
+    After receiving your response, an optional share prompt appears (visible only to you):
+    - **Share anonymously** — posts your check-in and Grok's response in the server's growth channel, without your name or avatar.
+    - **Share with my name** — same embed, but includes your display name and avatar.
+    - **Keep private** — dismisses the prompt; nothing is posted publicly.
+  </Step>
+</Steps>
+
+<Note>
+  The sharing prompt only appears if an admin has configured a growth channel with `/growth set_channel #channel`. Sharing is always **opt-in** — Alphapy never posts your check-in automatically.
+</Note>
+
+#### Premium: Mockingbird mode
+
+Premium members receive **Mockingbird mode** — a direct, sharper coaching tone designed for members who prefer unfiltered, high-intensity feedback over gentle encouragement.
+
+---
+
+## Growth History
+
+### `/growthhistory`
+
+Review your last 15 check-ins in a paginated embed (3 entries per page). Each entry shows the date, the goal you wrote, and the obstacle you described. Select any entry from the dropdown to open it in full detail, including Grok's original coaching response. A **Delete** button in the detail view lets you permanently remove an individual entry after a confirmation step.
+
+**Cooldown:** 1 use per 30 seconds per user.
+
+**Permissions:** Everyone (ephemeral — only you see your history)
+
+**Example:**
+
+```
+/growthhistory
+```
+
+<Info>
+  Growth history is stored in Alphapy's own database. It does not read the Innersync App's encrypted reflections vault — your zero-knowledge journal data stays private.
+</Info>
+
+---
+
+## AI Learning & Content
+
+### `/learn_topic`
+
+Get a comprehensive, AI-generated explanation of any topic. Alphapy searches its local knowledge base (`.md` files) and connected Google Drive content first, then passes the results to Grok, which synthesises a thorough explanation tailored to your question.
+
+**Permissions:** Everyone
+
+<ParamField path="topic" type="string" required>
+  The topic or question you want to learn about.
+</ParamField>
+
+**Example:**
+
+```
+/learn_topic topic:"position sizing in forex trading"
+/learn_topic topic:"how compound interest works"
+```
+
+<Tip>
+  Be specific. "How does compound interest affect a $1,000 investment over 5 years?" returns a more useful response than just "compound interest."
+</Tip>
+
+---
+
+### `/create_caption`
+
+Generate ready-to-post social media captions using Grok. Provide a topic and an optional style/tone and the bot returns a polished caption you can copy directly to Instagram, X, LinkedIn, or wherever you need it.
+
+**Permissions:** Everyone
+
+<ParamField path="topic" type="string" required>
+  The subject matter for the caption.
+</ParamField>
+
+<ParamField path="style" type="string">
+  The tone or style you want — for example: `motivational`, `educational`, `casual`, `professional`.
+</ParamField>
+
+**Examples:**
+
+```
+/create_caption topic:"morning mindset routine" style:"motivational"
+/create_caption topic:"our new trading course launch" style:"professional"
+```
+
+---
+
+### `/leaderhelp`
+
+Get AI-powered leadership guidance for the challenges you're actually facing as a community leader or team manager. Run the command, choose a challenge type from the presented options — such as **disengaged team**, **burnout**, **member dropoff**, or **self-doubt** — or type a custom question. Grok generates a contextual, actionable response.
+
+**Permissions:** Everyone (with cooldown)
+
+**Example:**
+
+```
+/leaderhelp
+```
+
+*(Choose a challenge category from the view, or type your own question to receive tailored leadership guidance.)*
+
+---
+
+### `/lotquiz`
+
+Test your forex risk management knowledge across three realistic trading scenarios. The quiz presents each scenario interactively and evaluates your decisions — useful for community education and accountability challenges.
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/lotquiz
+```
+
+---
+
+## When AI is Unavailable
+
+Alphapy is designed to degrade gracefully when the Grok API is unreachable. Instead of showing raw error messages, affected commands display a calm "temporarily unavailable" message to your members. If the service is being rate-limited, a separate, distinct message is shown.
+
+**As an admin, here's what to do:**
+
+<Steps>
+  <Step title="Check /gptstatus">
+    Run `/gptstatus` to see the `last_failure_kind` field. It will tell you whether Grok is `offline` (credits exhausted, invalid key, network error, or a 5xx from the provider) or `rate_limited`.
+  </Step>
+  <Step title="Review the detail field">
+    The embed includes an operator-facing detail string that gives more context — for example, whether credits have run out or the API key is missing.
+  </Step>
+  <Step title="Wait or escalate">
+    Rate limits typically resolve within minutes. For `offline` failures related to credentials or credits, contact your server's Innersync administrator.
+  </Step>
+</Steps>
+
+<Warning>
+  Commands affected during an outage include `/growthcheckin`, `/growthhistory` (Grok responses), `/learn_topic`, `/create_caption`, `/leaderhelp`, AI-powered verification, and the reflection agent. The underlying data (check-ins, history) remains intact and accessible once the AI recovers.
+</Warning>

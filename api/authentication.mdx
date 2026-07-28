@@ -1,0 +1,119 @@
+---
+title: "Authenticate Alphapy API Requests"
+sidebarTitle: "Authentication"
+description: "Use a Supabase JWT token or API key to authenticate requests to the Alphapy REST API. Supabase JWT is the recommended method for dashboard integrations."
+---
+
+Nearly all Alphapy API endpoints require authentication. The API supports two methods: a Supabase JWT bearer token (recommended for user-facing integrations) and an API key with a user ID header (suitable for service-to-service calls). You need to choose one method and include the appropriate headers with every request.
+
+## Supabase JWT (Recommended)
+
+Pass your Supabase session's access token as a `Bearer` token in the `Authorization` header. Alphapy validates the token against the same Supabase project it is configured to use, then derives user identity from the verified JWT claims.
+
+```http
+Authorization: Bearer <your-supabase-jwt>
+```
+
+<CodeGroup>
+
+```typescript TypeScript
+const { data: { session } } = await supabase.auth.getSession();
+
+if (!session?.access_token) {
+  throw new Error("Not authenticated");
+}
+
+const response = await fetch(`${alphapyBaseUrl}/api/dashboard/metrics`, {
+  headers: {
+    "Authorization": `Bearer ${session.access_token}`,
+  },
+});
+
+if (!response.ok) {
+  const error = await response.json();
+  throw new Error(error.detail || "Request failed");
+}
+
+const metrics = await response.json();
+```
+
+```bash curl
+curl -H "Authorization: Bearer <your-supabase-jwt>" \
+  https://your-alphapy-bot-url/api/dashboard/metrics
+```
+
+</CodeGroup>
+
+<Note>
+  The Supabase project used by your application **must be the same project** that Alphapy is configured with. If they differ, a valid token from your app will still produce a `401` from Alphapy.
+</Note>
+
+## API Key (Fallback)
+
+For service-to-service calls where a Supabase session isn't available — such as automation scripts or backend cron jobs — pass your API key and a user ID using the `X-API-Key` and `X-User-Id` headers.
+
+```http
+X-API-Key: <your-api-key>
+X-User-Id: <user-id>
+```
+
+Both headers are required when using this method. Omitting `X-User-Id` will result in a missing authentication context error.
+
+<CodeGroup>
+
+```typescript TypeScript
+const response = await fetch(`${alphapyBaseUrl}/api/dashboard/metrics`, {
+  headers: {
+    "X-API-Key": process.env.ALPHAPY_API_KEY,
+    "X-User-Id": userId,
+  },
+});
+```
+
+```bash curl
+curl -H "X-API-Key: <your-api-key>" \
+     -H "X-User-Id: <user-id>" \
+  https://your-alphapy-bot-url/api/dashboard/metrics
+```
+
+</CodeGroup>
+
+## Choosing the Right Method
+
+| Method | Use when |
+|---|---|
+| Supabase JWT | User-facing dashboard, web app, any context where you already have a Supabase session |
+| API Key | Service-to-service calls, automation scripts, background jobs without a user session |
+
+## Common Authentication Errors
+
+<AccordionGroup>
+
+<Accordion title="401 Unauthorized">
+  Your request is missing a valid authentication credential, or the credential provided has expired or is malformed.
+
+  **Check the following:**
+  - The `Authorization` header is present and formatted as `Bearer <token>` — the `Bearer ` prefix is required.
+  - The Supabase access token is still valid. Tokens expire; refresh the session before making the call.
+  - If using API key auth, verify that `X-API-Key` contains the correct key value.
+</Accordion>
+
+<Accordion title="Missing authentication context">
+  Alphapy received a request with neither an `Authorization` header nor an `X-User-Id` header. At least one must be present for the API to identify the caller.
+
+  **Fix:** Add one of the following to your request:
+  - `Authorization: Bearer <supabase-jwt>` for JWT auth, or
+  - Both `X-API-Key: <key>` and `X-User-Id: <user-id>` for API key auth.
+</Accordion>
+
+<Accordion title="JWT valid in your app but 401 in Alphapy">
+  This happens when your application and Alphapy are configured to use **different Supabase projects**. The token is cryptographically valid, but Alphapy can't verify it because it points to the wrong project.
+
+  **Fix:** Confirm that `SUPABASE_URL` in your Alphapy deployment matches `NEXT_PUBLIC_SUPABASE_URL` in your application. Both services must reference the same Supabase project URL. If they must remain on different projects, switch to API key authentication instead.
+</Accordion>
+
+</AccordionGroup>
+
+<Tip>
+  Always refresh Supabase JWT tokens before they expire to avoid authentication failures in long-running sessions. Call `supabase.auth.getSession()` or `supabase.auth.refreshSession()` before each API call if your session may be stale.
+</Tip>

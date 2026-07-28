@@ -1,0 +1,310 @@
+---
+title: "Community Engagement Commands: Challenges & Badges"
+sidebarTitle: "Engagement"
+description: "Run timed challenges, award badges, manage OG claims, compute weekly awards, and configure every engagement feature to gamify your Discord community."
+---
+
+Alphapy's engagement system turns passive community membership into an active experience. Timed message challenges drive participation, badges reward consistent contributors, OG claims create early-adopter status, and weekly awards celebrate top community members automatically. Every engagement feature is independently controllable so you can enable exactly what fits your community's culture.
+
+<Note>
+  All engagement features are **off by default**. Enable each feature individually with `/engagement toggle <feature> true` before using the associated commands.
+</Note>
+
+---
+
+## Challenges
+
+Challenges are timed message-count contests. Run one to spike activity in a specific channel, reward a top contributor, or pick a random winner from participants.
+
+### `/challenge start`
+
+Start a timed challenge in a channel. Choose between **leaderboard** mode (the member with the most messages wins) or **random** mode (any participating member has an equal chance of winning, regardless of message count).
+
+<ParamField path="duration" type="string">
+  How long the challenge runs. Accepts `10d` (days), `3h30m` (hours and minutes), or a number of seconds. Defaults to **24 hours**.
+</ParamField>
+
+<ParamField path="mode" type="string">
+  `leaderboard` — most messages wins. `random` — a random participant is drawn at the end. Defaults to `leaderboard`.
+</ParamField>
+
+<ParamField path="title" type="string">
+  A display title for the challenge announcement.
+</ParamField>
+
+<ParamField path="channel" type="channel">
+  The channel to count messages in. Defaults to the channel where you run the command.
+</ParamField>
+
+**Permissions:** Manage Server
+
+**Examples:**
+
+```
+/challenge start duration:"24h" mode:"leaderboard" title:"Most Active Friday Challenge" channel:#general
+
+/challenge start duration:"7d" mode:"random" title:"Weekly Lucky Draw" channel:#community-chat
+```
+
+<Tip>
+  Use **leaderboard** mode to reward your most active members. Use **random** mode to encourage casual participation — everyone has a fair shot regardless of how many messages they send.
+</Tip>
+
+---
+
+### `/challenge end`
+
+End the active challenge immediately and announce the winner. The bot calculates the result based on the configured mode and posts an announcement.
+
+<ParamField path="challenge_id" type="string">
+  The ID of a specific challenge to end. Defaults to the most recently started challenge.
+</ParamField>
+
+**Permissions:** Manage Server
+
+**Example:**
+
+```
+/challenge end
+/challenge end challenge_id:5
+```
+
+---
+
+### `/challenge cancel`
+
+Cancel the active challenge without determining a winner. No announcement is posted.
+
+<ParamField path="challenge_id" type="string">
+  The ID of a specific challenge to cancel. Defaults to the most recent.
+</ParamField>
+
+**Permissions:** Manage Server
+
+**Example:**
+
+```
+/challenge cancel
+```
+
+---
+
+### `/challenge status`
+
+Display the current challenge's remaining time, participant count, a progress bar, and the top 5 leaderboard.
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/challenge status
+```
+
+---
+
+### `/challenge edit`
+
+Edit a running challenge — adjust the mode, duration, title, or manually add/remove participants and set message counts.
+
+<ParamField path="field" type="string" required>
+  The field to edit: `mode`, `duration`, `title`, `add_participant`, `remove_participant`, or `set_count`.
+</ParamField>
+
+<ParamField path="mode" type="string">
+  New challenge mode (`leaderboard` or `random`).
+</ParamField>
+
+<ParamField path="duration" type="string">
+  New duration (e.g., `2d`, `6h`).
+</ParamField>
+
+<ParamField path="title" type="string">
+  New display title.
+</ParamField>
+
+<ParamField path="member" type="user">
+  The member to add, remove, or update when using `add_participant`, `remove_participant`, or `set_count`.
+</ParamField>
+
+<ParamField path="set_count" type="integer">
+  Manually set a participant's message count. Only applies in `leaderboard` mode.
+</ParamField>
+
+<ParamField path="challenge_id" type="string">
+  Specific challenge ID. Defaults to the most recent.
+</ParamField>
+
+**Permissions:** Manage Server
+
+**Examples:**
+
+```
+/challenge edit field:duration duration:"48h"
+/challenge edit field:add_participant member:@CommunityMember
+/challenge edit field:set_count member:@CommunityMember set_count:150
+```
+
+---
+
+## Badges
+
+Badges are persistent, server-specific achievements you award to members. Each badge key can be linked to a Discord role so earning the badge automatically grants the role.
+
+### `/badge give`
+
+Grant a badge to a member. If the badge key is linked to a Discord role (via `/engagement set_badge_role`), the bot assigns the role at the same time.
+
+<ParamField path="member" type="user" required>
+  The member to award the badge to.
+</ParamField>
+
+<ParamField path="badge_key" type="string" required>
+  The badge identifier (e.g., `winner`, `og`, `motivator`). Badge keys are defined by your server configuration.
+</ParamField>
+
+**Permissions:** Manage Roles
+
+**Example:**
+
+```
+/badge give member:@CommunityMember badge_key:winner
+/badge give member:@CommunityMember badge_key:motivator
+```
+
+---
+
+### `/badge list`
+
+List all badges a member has earned in this server.
+
+<ParamField path="member" type="user">
+  The member to look up. Defaults to yourself.
+</ParamField>
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/badge list
+/badge list member:@CommunityMember
+```
+
+---
+
+## OG Claims
+
+The OG claim system lets you designate a limited number of founding/early-adopter members. Post the claim message and members react with ⚜ to secure their spot before the cap is reached.
+
+### `/og setup`
+
+Post the OG claim message in a channel. Members react with the ⚜ emoji to claim a spot. Once the cap is reached, no further claims are accepted.
+
+<ParamField path="channel" type="channel">
+  The channel to post the OG claim message in. Defaults to the current channel.
+</ParamField>
+
+**Permissions:** Manage Server
+
+**Example:**
+
+```
+/og setup channel:#og-claims
+```
+
+---
+
+### `/og status`
+
+Show the current OG claim count and how many spots remain.
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/og status
+```
+
+---
+
+## Weekly Awards
+
+Weekly awards automatically recognise your top community contributors on a regular schedule. Configure the award categories that matter to your server — top poster, most reactions received, best food content, and more.
+
+### `/weekly compute`
+
+Manually compute and announce weekly awards to the configured awards channel. Run this at the end of your award period if you're not using automatic scheduling.
+
+**Permissions:** Manage Server
+
+**Example:**
+
+```
+/weekly compute
+```
+
+---
+
+## Configuration Reference
+
+All `/engagement` configuration commands require **Administrator** permissions.
+
+<Accordion title="Feature toggles">
+  | Command | Description |
+  |---|---|
+  | `/engagement show` | Display all engagement settings for this server. |
+  | `/engagement toggle challenges true\|false` | Enable or disable the challenges feature. |
+  | `/engagement toggle weekly true\|false` | Enable or disable weekly awards. |
+  | `/engagement toggle badges true\|false` | Enable or disable the badge system. |
+  | `/engagement toggle streaks true\|false` | Enable or disable streak tracking. |
+  | `/engagement toggle og_claims true\|false` | Enable or disable OG claim functionality. |
+</Accordion>
+
+<Accordion title="Challenge settings">
+  | Command | Description |
+  |---|---|
+  | `/engagement set_challenge_winner_role @role` | Assign this role to challenge winners. Leave empty to clear. |
+</Accordion>
+
+<Accordion title="Badge settings">
+  | Command | Description |
+  |---|---|
+  | `/engagement set_badge_role <badge_key> @role` | Link a Discord role to a badge key. When a member earns the badge, they receive the role automatically. Leave role empty to clear. |
+</Accordion>
+
+<Accordion title="OG claim settings">
+  | Command | Description |
+  |---|---|
+  | `/engagement set_og_cap <number>` | Maximum number of OG claim spots. Default: **50**. |
+  | `/engagement set_og_text <text>` | Custom message text for the OG claim post. Leave empty to reset to the default. |
+</Accordion>
+
+<Accordion title="Weekly awards settings">
+  | Command | Description |
+  |---|---|
+  | `/engagement set_weekly_channel #channel` | Channel for weekly award announcements. Leave empty to clear. |
+  | `/engagement set_food_channels <ids>` | Comma-separated channel IDs counted as food-content channels for weekly awards. |
+  | `/engagement set_weekly_awards <json>` | Configure award categories as JSON. Each entry needs: `key`, `label`, `subtitle`, and `filter` (`non_food`, `food`, `image`, or `reactions`). |
+</Accordion>
+
+<Accordion title="Streak settings">
+  | Command | Description |
+  |---|---|
+  | `/engagement set_streaks_nicknames true\|false` | Toggle nickname suffixes for active streaks (e.g., `Name \| 🔥 week 2`). |
+</Accordion>
+
+**Example — enabling challenges and setting a winner role:**
+
+```
+/engagement toggle challenges true
+/engagement set_challenge_winner_role @Champion
+```
+
+**Example — configuring weekly awards with custom categories:**
+
+```
+/engagement set_weekly_channel #weekly-awards
+/engagement set_weekly_awards [{"key":"top_poster","label":"Top Poster","subtitle":"Most messages this week","filter":"non_food"},{"key":"top_reactions","label":"Most Loved","subtitle":"Highest reactions received","filter":"reactions"}]
+```

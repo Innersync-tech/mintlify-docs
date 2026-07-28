@@ -1,0 +1,80 @@
+---
+title: "Alphapy Premium Features: Full Comparison"
+sidebarTitle: "Features"
+description: "Full breakdown of what Alphapy Premium unlocks: AI call limits, agent session caps, image reminders, Mockingbird mode, and server-wide advanced tools."
+---
+
+Alphapy Premium gives you and your community higher daily AI limits, unrestricted reminders with images, personal agent sessions that persist memory across conversations, and Mockingbird spicy mode for sharper growth check-in feedback. Some premium features — like ticket AI summaries, payment verification, and advanced automod — unlock for the **entire server** the moment any member activates premium there. This page covers everything that changes when you upgrade.
+
+## AI & Grok
+
+| Feature | Free | Monthly | Annual / Lifetime |
+|---------|------|---------|-------------------|
+| Grok / AI calls per day | 5 / day | 25 / day | Unlimited |
+| Mockingbird spicy mode (in `/growthcheckin`) | — | ✓ | ✓ |
+| Growth check-in history (`/growthhistory`) | ✓ | ✓ | ✓ |
+| Share check-ins to community channel | ✓ | ✓ | ✓ |
+
+<Note>
+  **Mockingbird spicy mode** delivers direct, no-sugar-coating feedback in `/growthcheckin` — ideal for members who want blunt accountability over gentle encouragement.
+</Note>
+
+## Personal Agents
+
+Personal agents give each member a persistent AI companion with memory that carries over between sessions. Agents require your Innersync account to be connected — run `/link` to set this up.
+
+| Feature | Free | Monthly | Annual / Lifetime |
+|---------|------|---------|-------------------|
+| Agent sessions per day (`/agent start`) | 10 / day | 25 / day | Unlimited |
+| Multi-turn sessions (`/agent continue`, `/agent end`) | ✓ | ✓ | ✓ |
+| Personalized memory | ✓ | ✓ | ✓ |
+| Memory & preferences in Innersync App | ✓ | ✓ | ✓ |
+
+## Reminders & Automation
+
+| Feature | Free | Monthly | Annual / Lifetime |
+|---------|------|---------|-------------------|
+| Active reminders | Max 10 | Unlimited | Unlimited |
+| Image / banner reminders | — | ✓ | ✓ |
+| Live session presets (`/add_live_session`) | — | ✓ | ✓ |
+| Embed watcher with image | — | ✓ | ✓ |
+
+<Tip>
+  **Live session presets** let you create a recurring reminder that automatically posts "Live session starting now!" — with an optional image — without having to set up a new reminder each time.
+</Tip>
+
+## Server-Wide Features
+
+These features unlock for **every member in your server** as soon as any one member activates premium on that guild. You do not need everyone to have a premium subscription.
+
+<CardGroup cols={2}>
+  <Card title="Innersync Link" icon="link">
+    `/link` connects Discord to the Innersync App. Required for personal agents and for consent-gated reflection sharing. All members can use it once premium is active on the server.
+  </Card>
+  <Card title="Ticket AI Summaries" icon="ticket">
+    When a ticket is closed, Grok automatically generates a summary of the conversation. Summaries are posted to your configured log channel so your staff can review them at a glance.
+  </Card>
+  <Card title="Payment Verification" icon="shield-check">
+    Members can submit payment screenshots through a private ticket flow. Grok reviews each screenshot against your configured reference image and prompt context, flagging valid and invalid submissions for your staff.
+  </Card>
+  <Card title="Advanced Automod" icon="robot">
+    Adds two premium automod rule types: **regex rules** (pattern matching) and **AI content analysis rules** (Grok evaluates messages against a policy you define). Both are configured with `/automod add_regex_rule` and `/automod add_ai_rule`.
+  </Card>
+</CardGroup>
+
+## Other Premium Perks
+
+- **`/learn_topic`** — Use Grok to research any topic, optionally drawing on PDFs and documents in your connected Google Drive. See [Google Drive setup](/configuration/google-drive) for how to connect it.
+- **`/create_caption`** — Generate social media captions for community content using Grok.
+
+## Account & Billing
+
+| Feature | Free | Monthly | Annual / Lifetime |
+|---------|------|---------|-------------------|
+| Expiry warning DM (7 days before renewal) | — | ✓ | — *(not applicable for lifetime)* |
+| Premium on one server (`/premium_transfer`) | — | ✓ | ✓ |
+| Founder recognition (early bird) | — | Annual only | Lifetime |
+
+<Card title="View Plans & Subscribe" icon="star" href="/premium/plans">
+  Compare plans and subscribe at pricing.alphapy.innersync.tech
+</Card>

@@ -1,0 +1,212 @@
+---
+title: "Per-Feature Configuration Commands Reference"
+sidebarTitle: "Feature Config"
+description: "Reference for all Alphapy per-feature configuration commands: system, reminders, automod, onboarding, verification, invites, GDPR, and engagement settings."
+---
+
+Alphapy is fully configurable on a per-server basis — every channel, role, and setting you apply is scoped exclusively to your guild. Use `/<scope> show` at any time to inspect the current settings for a feature, and run the individual set commands to update them. All commands in this reference require **Administrator** permissions.
+
+<Accordion title="System settings (/system)">
+  Use `/system` commands to configure global logging and set the rules channel your server uses for onboarding and rule-acceptance flows.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/system show` | Display all current system settings for this server. |
+  | `/system set_log_channel [#channel]` | Set the channel where Alphapy posts moderation logs and system events. |
+  | `/system set_rules_channel [#channel]` | Set the channel Alphapy points members to for your server rules. |
+  | `/system set_log_level [verbose\|normal\|critical]` | Control how much detail appears in the log channel. `verbose` shows everything; `critical` shows only errors. |
+</Accordion>
+
+<Accordion title="Reminders (/reminders)">
+  Use `/reminders` to enable the reminder system, set a default posting channel, and control whether reminders ping `@everyone`.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/reminders show` | Display current reminder settings. |
+  | `/reminders toggle <true\|false>` | Enable or disable the reminder system entirely. |
+  | `/reminders set_default_channel [#channel]` | Set the channel where reminders are posted when no channel is specified on the individual reminder. |
+  | `/reminders set_everyone <true\|false>` | Control whether reminders include an `@everyone` mention. |
+
+  <Note>
+    Premium members can attach images and banners to reminders and use `/add_live_session` presets. See [Premium Features](/premium/features) for details.
+  </Note>
+</Accordion>
+
+<Accordion title="Tickets (/ticketbot)">
+  Use `/ticketbot` to configure the private-channel ticketing system, including where tickets open and who can manage them.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/ticketbot show` | Display current ticket settings. |
+  | `/ticketbot set_category [#category]` | Set the Discord category where Alphapy creates ticket channels. |
+  | `/ticketbot set_staff_role [@role]` | Set the role whose members can view, claim, and close tickets. |
+  | `/ticketbot set_escalation_role [@role]` | Set the role pinged when a ticket is escalated. |
+</Accordion>
+
+<Accordion title="AI / Grok (/gpt)">
+  Use `/gpt` to tune Alphapy's AI behaviour, including which model is used and how creative its responses are.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/gpt show` | Display current AI settings. |
+  | `/gpt set_model [model-name]` | Set the AI model (e.g. `grok-3`). |
+  | `/gpt set_temperature [0.0–2.0]` | Set response creativity. Lower values (e.g. `0.2`) produce focused, factual replies; higher values (e.g. `1.2`) produce more varied responses. |
+</Accordion>
+
+<Accordion title="Embed Watcher (/embedwatcher)">
+  The embed watcher monitors your announcements channel and automatically creates reminders from embedded posts. Use `/embedwatcher` to configure which channel it watches and how it behaves.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/embedwatcher show` | Display current embed watcher settings. |
+  | `/embedwatcher set_announcements [#channel]` | Set the channel the embed watcher monitors for announcement embeds. |
+  | `/embedwatcher set_offset [minutes]` | Set how many minutes before an embedded event the reminder fires. |
+  | `/embedwatcher set_non_embed <true\|false>` | Control whether the watcher also processes plain (non-embed) messages. |
+  | `/embedwatcher set_process_bot_messages <true\|false>` | Control whether the watcher processes messages from other bots. |
+</Accordion>
+
+<Accordion title="Onboarding (/onboarding)">
+  Use `/onboarding` to build a fully custom welcome flow — from rules acceptance to multi-step questions and role assignment.
+
+  **Onboarding modes:**
+  - **Disabled** — No onboarding flow.
+  - **Rules Only** — Members accept rules to receive their role.
+  - **Rules + Questions** — Members accept rules and answer questions before receiving their role.
+  - **Questions Only** — Members answer questions before receiving their role.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/onboarding show` | Display current onboarding settings. |
+  | `/onboarding toggle <true\|false>` | Enable or disable the onboarding flow. |
+  | `/onboarding set_mode <mode>` | Set the onboarding mode (see above). |
+  | `/onboarding add_question <step> <question> [type] [required]` | Add a question at a given step number. |
+  | `/onboarding delete_question <step>` | Remove the question at a given step. |
+  | `/onboarding reset_questions` | Clear all custom questions. |
+  | `/onboarding add_rule <order> <title> <description> [thumbnail_url] [image_url]` | Add a rule slide. Both `thumbnail_url` (shown right) and `image_url` (shown at bottom) are optional. |
+  | `/onboarding delete_rule <order>` | Remove a rule slide. |
+  | `/onboarding reset_rules` | Clear all rule slides. |
+  | `/onboarding set_role [@role]` | Set the role assigned when onboarding is completed. |
+  | `/onboarding set_join_role [@role]` | Set a role assigned immediately on join, before onboarding completes. |
+  | `/onboarding panel_post [#channel]` | Post the onboarding panel to a channel. |
+  | `/onboarding reorder` | Reorder steps interactively. |
+</Accordion>
+
+<Accordion title="Verification (/verification)">
+  Verification runs an AI-assisted screenshot review flow, letting members submit payment proof for automated checking. Use `/verification` to configure categories, roles, and the AI prompt context.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/verification show` | Display current verification settings. |
+  | `/verification set_verified_role [@role]` | Set the role granted when verification succeeds. |
+  | `/verification set_category [#category]` | Set the category where private verification ticket channels are created. |
+  | `/verification set_vision_model [model]` | Override the vision model used to review screenshots (e.g. `grok-4`). |
+  | `/verification set_ai_prompt_context [text]` | Add extra context for the AI reviewer — describe what a valid payment looks like for your community (max 1 000 characters). |
+  | `/verification set_reviewer_role [@role]` | Set a role that can manually approve or reject verification submissions. |
+  | `/verification set_max_payment_age [days]` | Reject screenshots where the payment date is older than this many days. |
+  | `/verification set_reference_image <attachment>` | Upload a reference image the AI compares against submitted screenshots. Use `/verification reset_reference_image` to clear it. |
+</Accordion>
+
+<Accordion title="Auto-moderation (/automod)">
+  Use `/automod` to build rule-based and AI-powered moderation. Each rule has an action (warn, delete, timeout, etc.) and fires independently.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/automod status` | Show whether automod is active. |
+  | `/automod show` | List all configured rules. |
+  | `/automod toggle <true\|false>` | Enable or disable all automod rules at once. |
+  | `/automod set_log_channel [#channel]` | Set the channel where automod actions are logged. |
+  | `/automod rules` | List rule IDs and names. |
+  | `/automod add_spam_rule <name> [max_messages] [window_seconds] [action]` | Add a message-rate spam rule. |
+  | `/automod add_badwords_rule <name> <words> [action]` | Add a banned-words rule. |
+  | `/automod add_links_rule <name> [allow_links] [whitelist] [blacklist] [action]` | Add a link filter rule. |
+  | `/automod add_mentions_rule <name> [max_mentions] [action]` | Add a mass-mention rule. |
+  | `/automod add_caps_rule <name> [min_length] [max_ratio] [action]` | Add an excessive-caps rule. |
+  | `/automod add_duplicate_rule <name> [max_duplicates] [action]` | Add a repeated-message rule. |
+  | `/automod add_regex_rule <name> <patterns> [action]` | *(Premium)* Add a regex-pattern rule. |
+  | `/automod add_ai_rule <name> <policy> [action] [threshold]` | *(Premium)* Add an AI content-analysis rule. `threshold` is 0.5–1.0, default 0.7. |
+  | `/automod edit_rule <rule_id> [fields...]` | Edit fields of an existing rule. |
+  | `/automod delete_rule <rule_id>` | Delete a rule permanently. |
+  | `/automod set_rule_enabled <rule_id> <true\|false>` | Toggle a single rule on or off. |
+  | `/automod set_severity <rule_id> <1–10>` | Set the severity level of a rule. |
+  | `/automod logs [limit] [user_id] [rule_id] [action] [days]` | Query automod action logs. All filters are optional. |
+</Accordion>
+
+<Accordion title="Invites (/invites)">
+  Track which members invited whom, and customise the message posted when someone joins through an invite link.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/invites show` | Display current invite tracker settings. |
+  | `/invites toggle <true\|false>` | Enable or disable invite tracking. |
+  | `/invites set_channel [#channel]` | Set the channel where invite events are posted. |
+  | `/invites set_template <variant> [template]` | Set the join message template. `variant` is `with inviter` or `without inviter` (dropdown). Available placeholders: `{member}`, `{member_name}`, `{inviter}`, `{inviter_name}`, `{count}`. |
+</Accordion>
+
+<Accordion title="GDPR consent (/gdpr)">
+  The GDPR module posts a consent panel and assigns a role to members who accept, enabling you to gate features on explicit data consent.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/gdpr show` | Display current GDPR settings. |
+  | `/gdpr toggle <true\|false>` | Enable or disable the GDPR consent module. |
+  | `/gdpr set_channel [#channel]` | Set the channel where the consent panel is posted. |
+  | `/gdpr set_acceptance_role [@role]` | Set the role granted when a member accepts the consent panel. |
+  | `/gdpr post` | Post (or re-post) the consent panel to the configured channel. |
+</Accordion>
+
+<Accordion title="Engagement (/engagement)">
+  Use `/engagement` to enable community challenges, weekly awards, badge roles, streaks, and OG claims.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/engagement show` | Display current engagement settings. |
+  | `/engagement toggle <feature> <true\|false>` | Enable or disable a specific feature. Features: `challenges`, `weekly`, `badges`, `streaks`, `og_claims`. |
+  | `/engagement set_challenge_winner_role [@role]` | Set the role awarded to challenge winners. |
+  | `/engagement set_weekly_channel [#channel]` | Set the channel where weekly award embeds are posted. |
+  | `/engagement set_food_channels [ids]` | Set channels that count as food-photo channels for the Foodfluencer award. |
+  | `/engagement set_weekly_awards <json>` | Customise which award categories appear in the weekly embed. |
+  | `/engagement set_badge_role <badge_key> [@role]` | Assign a Discord role to a badge. Keys: `winner`, `og`, `motivator`, `foodfluencer`, `sharpshooter`, `star`. |
+  | `/engagement set_og_cap <number>` | Set the maximum number of OG claims. |
+  | `/engagement set_og_text [text]` | Set the text shown in the OG claim button. |
+  | `/engagement set_streaks_nicknames <true\|false>` | Control whether streak milestones update member nicknames. |
+</Accordion>
+
+<Accordion title="Growth check-ins (/growth)">
+  Growth check-ins let members log progress updates. When a channel is configured, check-ins can be optionally shared to the community.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/growth set_channel [#channel]` | Set the channel where community growth check-ins are shared. Omit the channel argument to clear it — the share option then disappears from `/growthcheckin`. |
+</Accordion>
+
+<Accordion title="Agents (/config agents)">
+  Personal agents give members a persistent AI companion. Toggle agents on or off per server with `/config agents`.
+
+  | Command | Description |
+  |---------|-------------|
+  | `/config agents show` | Display whether agents are enabled for this server. |
+  | `/config agents toggle <true\|false>` | Enable or disable agent access for this server. When enabled, linked members can use `/agent list`, `/agent start`, `/agent continue`, `/agent end`, and `/agent status`. |
+
+  <Note>
+    Members must run `/link` to connect their Innersync account before they can start an agent session.
+  </Note>
+</Accordion>
+
+## Feature enable/disable reference
+
+Each module has a single enabled flag. Disabling a module silences its member-facing commands while keeping admin configuration commands available so you can re-enable it at any time. The table below shows what stops working when each scope is disabled.
+
+| Scope | What is disabled |
+|-------|-----------------|
+| `growth` | `/growthcheckin`, `/growthhistory` |
+| `verification` | Verification panel, screenshot flow, and review buttons |
+| `ticketbot` | Member ticket create, claim, and close |
+| `embedwatcher` | Auto-reminder creation from announcements |
+| `custom_commands` | Message trigger replies |
+| `gpt` | `/create_caption`, `/learn_topic` |
+| `faq` | All `/faq` commands |
+| `engagement` | All engagement features (master toggle combined with per-feature flags) |
+| `reminders` | `/add_reminder` and related reminder commands |
+| `automod` | All automod rules |
+| `onboarding` | Onboarding flow |
+| `agents` | All `/agent` commands |

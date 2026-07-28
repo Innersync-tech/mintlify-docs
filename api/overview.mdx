@@ -1,0 +1,121 @@
+---
+title: "Alphapy REST API Overview & Getting Started"
+sidebarTitle: "Overview"
+description: "The Alphapy API provides HTTP endpoints for dashboard integration, agent sessions, health monitoring, reminder management, and webhook automation."
+---
+
+Alphapy exposes a REST API that lets you build dashboard integrations, automate guild configuration, manage agent sessions from external applications, and receive inbound webhook events from the Core API and other services. All endpoints follow standard HTTP conventions and return JSON responses, making them straightforward to consume from any language or tool.
+
+## Base URL
+
+All API requests target your deployed Alphapy bot's URL. There is no shared cloud base URL — every deployment is self-hosted.
+
+```
+https://your-alphapy-bot-url
+```
+
+All endpoints are prefixed with `/api` unless noted otherwise (for example, `/status` and `/top-commands` are available at the root).
+
+<Note>
+  Replace `https://your-alphapy-bot-url` with the actual URL of your Alphapy deployment throughout all examples in this documentation.
+</Note>
+
+## Available Endpoint Categories
+
+The API is organized into logical endpoint groups. Each category has its own authentication requirements and use cases.
+
+| Category | Description |
+|---|---|
+| Health & Status | Service health checks and uptime monitoring |
+| Metrics & Analytics | Dashboard metrics and command analytics |
+| Dashboard Config | Manage guild settings, onboarding, and automod via the web UI |
+| Agent Sessions | Start and manage `/agent` sessions from external apps |
+| Reminders | CRUD operations for user reminders |
+| Webhooks | Inbound events from Core API and external services |
+| Exports | CSV exports for tickets and FAQ data (via Discord slash commands) |
+
+## Rate Limits
+
+Alphapy enforces in-memory, IP-based sliding window rate limits to protect service stability. Limits vary by endpoint type.
+
+| Endpoint type | Limit |
+|---|---|
+| Health / metrics / status | 60 req/min |
+| GET endpoints | 30 req/min |
+| POST / PUT / DELETE | 10 req/min |
+
+When you exceed a limit, the API returns `429 Too Many Requests`. Back off and retry after a short delay.
+
+<Warning>
+  Rate limits are applied per IP address. If multiple services share an egress IP, they share the same rate limit budget.
+</Warning>
+
+## Error Responses
+
+All endpoints use standard HTTP status codes. Error response bodies follow a consistent format:
+
+```json
+{
+  "detail": "Error message description"
+}
+```
+
+Use the `detail` field to understand what went wrong and how to fix it.
+
+| Code | Meaning |
+|---|---|
+| 200 | Success |
+| 201 | Created |
+| 400 | Bad request — check your request body or parameters |
+| 401 | Unauthorized — invalid or missing auth token |
+| 403 | Forbidden — valid token but insufficient permissions |
+| 404 | Not found — the resource or endpoint does not exist |
+| 422 | Validation error — one or more parameter values are invalid |
+| 429 | Rate limited — you have exceeded the request limit for this endpoint type |
+| 503 | Service unavailable — a dependency (database, API key, migration) is not ready |
+
+## Request Correlation
+
+Every response from the Alphapy API includes an `X-Request-ID` header containing a unique identifier for that request. When reporting unexpected errors to support, always include this value — it lets the team trace the exact request through the logs.
+
+```http
+X-Request-ID: a3f1c2d4-5e6b-7890-abcd-ef1234567890
+```
+
+## API Versioning
+
+The current API version is **3.13.0 (Reflection Loop)**. The version is embedded in health check responses and is accessible at any time via `GET /api/health`:
+
+```bash
+curl https://your-alphapy-bot-url/api/health
+```
+
+```json
+{
+  "service": "alphapy",
+  "version": "3.13.0",
+  "uptime_seconds": 3600,
+  "db_status": "ok"
+}
+```
+
+There is no URL-based versioning prefix (e.g. `/v1/`). Breaking changes are communicated through the Innersync changelog.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Authentication"
+    icon="key"
+    href="/api/authentication"
+  >
+    Learn how to authenticate API requests using Supabase JWT or API key credentials.
+  </Card>
+  <Card
+    title="Health & Status"
+    icon="heart-pulse"
+    href="/api/health"
+  >
+    Query the health endpoint to check bot uptime, database connectivity, and LLM status.
+  </Card>
+</CardGroup>

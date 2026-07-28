@@ -1,0 +1,198 @@
+---
+title: "Health & Status API Endpoints Reference"
+sidebarTitle: "Health"
+description: "Monitor Alphapy service health with GET /api/health, /api/health/history, and /status endpoints. Returns uptime, DB status, and AI service health."
+---
+
+Alphapy exposes three health endpoints so you can monitor service availability, track historical uptime trends, and integrate bot health into your own dashboards or alerting pipelines. All health endpoints are unauthenticated and rate-limited to **60 requests per minute** per IP. Responses include an `X-Request-ID` header on every call for request correlation in your logs.
+
+---
+
+## GET /api/health
+
+Returns a detailed snapshot of the bot's current health: version, uptime, database connectivity, active guild count, recent command volume, and LLM service status.
+
+<CodeGroup>
+```bash cURL
+curl https://your-bot-url/api/health
+```
+</CodeGroup>
+
+### Response fields
+
+<ResponseField name="service" type="string" required>
+  Always `"alphapy"`. Identifies the service in multi-service monitoring setups.
+</ResponseField>
+
+<ResponseField name="version" type="string" required>
+  The running bot version, e.g. `"3.6.0"`.
+</ResponseField>
+
+<ResponseField name="uptime_seconds" type="number" required>
+  Seconds elapsed since the bot process last started.
+</ResponseField>
+
+<ResponseField name="db_status" type="string" required>
+  Database connectivity status. One of:
+  - `"ok"` — pool is healthy and queries are succeeding
+  - `"not_initialized"` — pool has not been set up yet
+  - `"error:<message>"` — a connection or query error occurred; the suffix contains the error detail
+</ResponseField>
+
+<ResponseField name="timestamp" type="string" required>
+  ISO 8601 timestamp at which this health snapshot was captured, e.g. `"2026-01-21T12:00:00Z"`.
+</ResponseField>
+
+<ResponseField name="guild_count" type="number">
+  Number of Discord guilds the bot is currently connected to.
+</ResponseField>
+
+<ResponseField name="active_commands_24h" type="number">
+  Total slash commands executed in the last 24 hours across all guilds.
+</ResponseField>
+
+<ResponseField name="gpt_status" type="string">
+  Status of the Grok/LLM service. One of `"operational"`, `"degraded"`, or `"error"`.
+</ResponseField>
+
+<ResponseField name="database_pool_size" type="number">
+  Current size of the `asyncpg` connection pool. Managed automatically — use this for capacity monitoring.
+</ResponseField>
+
+### Example response
+
+```json
+{
+  "service": "alphapy",
+  "version": "3.6.0",
+  "uptime_seconds": 3600,
+  "db_status": "ok",
+  "timestamp": "2026-01-21T12:00:00Z",
+  "guild_count": 2,
+  "active_commands_24h": 150,
+  "gpt_status": "operational",
+  "database_pool_size": 5
+}
+```
+
+### Error states
+
+| `db_status` value | Meaning |
+|---|---|
+| `"ok"` | All database operations healthy |
+| `"not_initialized"` | Bot is still starting up |
+| `"error:..."` | Database unavailable — check connection string and pool config |
+
+<Warning>
+  If `gpt_status` returns `"degraded"` or `"error"`, AI-powered features such as `/agent`, `/growthcheckin`, and automod AI rules will be impaired. Monitor this field in your alerting setup.
+</Warning>
+
+---
+
+## GET /status
+
+A lightweight legacy status check — no authentication required. Use this endpoint for simple uptime monitors that only need to know whether the bot is online and its current latency.
+
+<CodeGroup>
+```bash cURL
+curl https://your-bot-url/status
+```
+</CodeGroup>
+
+### Response fields
+
+<ResponseField name="online" type="boolean" required>
+  `true` if the bot process is running and connected to Discord.
+</ResponseField>
+
+<ResponseField name="latency" type="number" required>
+  Current WebSocket heartbeat latency to Discord in milliseconds.
+</ResponseField>
+
+<ResponseField name="uptime" type="string" required>
+  Human-readable uptime string, e.g. `"60 min"` or `"2 days"`.
+</ResponseField>
+
+### Example response
+
+```json
+{
+  "online": true,
+  "latency": 0,
+  "uptime": "60 min"
+}
+```
+
+<Note>
+  `GET /status` does not check database or LLM connectivity. For full service health, use `GET /api/health` instead.
+</Note>
+
+---
+
+## GET /api/health/history
+
+Returns historical health snapshots for trend analysis and incident review. Each record mirrors the fields returned by `GET /api/health`, with an added `checked_at` timestamp. Use this endpoint to build uptime charts or audit past incidents.
+
+<CodeGroup>
+```bash cURL — last 6 hours, 20 records
+curl "https://your-bot-url/api/health/history?hours=6&limit=20"
+```
+
+```bash cURL — default (24 h, 100 records)
+curl https://your-bot-url/api/health/history
+```
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="hours" type="number" default="24">
+  How many hours back to fetch health records.
+</ParamField>
+
+<ParamField query="limit" type="number" default="100">
+  Maximum number of records to return. Reduce this for faster responses when you only need a recent sample.
+</ParamField>
+
+### Response fields
+
+<ResponseField name="history" type="array" required>
+  Array of health snapshot objects. Each entry contains the same fields as `GET /api/health` plus:
+
+  <ResponseField name="history[].checked_at" type="string">
+    ISO 8601 timestamp when this snapshot was recorded.
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="period_hours" type="number" required>
+  The `hours` value used to query, echoed back for confirmation.
+</ResponseField>
+
+<ResponseField name="total_records" type="number" required>
+  Total number of records returned in this response.
+</ResponseField>
+
+### Example response
+
+```json
+{
+  "history": [
+    {
+      "service": "alphapy",
+      "version": "3.6.0",
+      "uptime_seconds": 3600,
+      "db_status": "ok",
+      "guild_count": 2,
+      "active_commands_24h": 150,
+      "gpt_status": "operational",
+      "database_pool_size": 5,
+      "checked_at": "2026-01-21T12:00:00Z"
+    }
+  ],
+  "period_hours": 24,
+  "total_records": 1
+}
+```
+
+<Tip>
+  Poll `GET /api/health/history` with a short `hours` window (e.g. `hours=1&limit=10`) to detect flapping or intermittent database errors that a single point-in-time health check would miss.
+</Tip>

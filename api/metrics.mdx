@@ -1,0 +1,260 @@
+---
+title: "Dashboard Metrics & Analytics API Reference"
+sidebarTitle: "Metrics"
+description: "Retrieve live dashboard metrics and command analytics from GET /api/dashboard/metrics and GET /top-commands endpoints for monitoring and reporting."
+---
+
+Alphapy's metrics endpoints give you a live view of bot performance, LLM usage, premium guard activity, agent session counts, automod cache health, and per-guild command trends — everything the Mind dashboard uses to render its overview screens. These endpoints require a valid Supabase JWT and are rate-limited to **30 requests per minute** per IP.
+
+---
+
+## GET /api/dashboard/metrics
+
+Returns a comprehensive metrics payload covering bot status, Grok/LLM statistics, reminders, support tickets, command usage, infrastructure health, premium guard observability, agent session counts, and cache metrics. The alias `GET /api/metrics` returns an identical response and exists for compatibility with the Mind monitoring system.
+
+<CodeGroup>
+```bash cURL — all guilds
+curl -H "Authorization: Bearer <token>" \
+  https://your-bot-url/api/dashboard/metrics
+```
+
+```bash cURL — filtered by guild
+curl -H "Authorization: Bearer <token>" \
+  "https://your-bot-url/api/dashboard/metrics?guild_id=123456789"
+```
+</CodeGroup>
+
+### Authentication
+
+Include your Supabase JWT in the `Authorization` header:
+
+```
+Authorization: Bearer <supabase_jwt>
+```
+
+### Query parameters
+
+<ParamField query="guild_id" type="string">
+  Discord snowflake. When provided, filters metrics to the specified guild only.
+</ParamField>
+
+### Response fields
+
+<ResponseField name="bot" type="object" required>
+  Core bot status.
+
+  <ResponseField name="bot.version" type="string">Bot version string.</ResponseField>
+  <ResponseField name="bot.codename" type="string">Release codename, e.g. `"Lifecycle Manager"`.</ResponseField>
+  <ResponseField name="bot.online" type="boolean">Whether the bot is connected to Discord.</ResponseField>
+  <ResponseField name="bot.latency_ms" type="number">Current WebSocket heartbeat latency in milliseconds.</ResponseField>
+  <ResponseField name="bot.uptime_seconds" type="number">Seconds since last bot start.</ResponseField>
+  <ResponseField name="bot.uptime_human" type="string">Human-readable uptime string.</ResponseField>
+  <ResponseField name="bot.commands_loaded" type="number">Number of slash commands registered.</ResponseField>
+  <ResponseField name="bot.guilds" type="array">Per-guild metadata objects.</ResponseField>
+</ResponseField>
+
+<ResponseField name="gpt" type="object" required>
+  Grok/LLM service statistics for the current session.
+
+  <ResponseField name="gpt.current_model" type="string">Active model name, e.g. `"grok-3"`.</ResponseField>
+  <ResponseField name="gpt.success_count" type="number">Successful completions since last start.</ResponseField>
+  <ResponseField name="gpt.error_count" type="number">Failed completions since last start.</ResponseField>
+  <ResponseField name="gpt.rate_limit_hits" type="number">Number of rate limit responses received from the LLM provider.</ResponseField>
+  <ResponseField name="gpt.average_latency_ms" type="number">Rolling average completion latency in milliseconds.</ResponseField>
+  <ResponseField name="gpt.total_tokens_session" type="number">Tokens consumed in the current session.</ResponseField>
+  <ResponseField name="gpt.last_success_time" type="string">ISO 8601 timestamp of the last successful completion.</ResponseField>
+  <ResponseField name="gpt.last_error_time" type="string">ISO 8601 timestamp of the last error.</ResponseField>
+  <ResponseField name="gpt.last_error_type" type="string">Error class and message from the last failure.</ResponseField>
+  <ResponseField name="gpt.recent_successes" type="array">Abbreviated recent success records.</ResponseField>
+  <ResponseField name="gpt.recent_errors" type="array">Abbreviated recent error records.</ResponseField>
+</ResponseField>
+
+<ResponseField name="reminders" type="object" required>
+  Reminder system statistics.
+
+  <ResponseField name="reminders.total" type="number">Total active reminders across all guilds.</ResponseField>
+  <ResponseField name="reminders.recurring" type="number">Reminders that fire on a repeating schedule.</ResponseField>
+  <ResponseField name="reminders.one_off" type="number">One-time reminders.</ResponseField>
+  <ResponseField name="reminders.next_event_time" type="string">ISO 8601 timestamp of the next scheduled reminder fire.</ResponseField>
+</ResponseField>
+
+<ResponseField name="tickets" type="object" required>
+  Support ticket system statistics.
+
+  <ResponseField name="tickets.total" type="number">All-time ticket count.</ResponseField>
+  <ResponseField name="tickets.open_count" type="number">Currently open tickets.</ResponseField>
+  <ResponseField name="tickets.per_status" type="object">Ticket counts keyed by status string.</ResponseField>
+  <ResponseField name="tickets.open_ticket_ids" type="array">Array of open ticket IDs (integers).</ResponseField>
+  <ResponseField name="tickets.open_items" type="array">Full ticket objects for open tickets, each containing `id`, `username`, `status`, `channel_id`, and `created_at`.</ResponseField>
+</ResponseField>
+
+<ResponseField name="command_usage" type="object" required>
+  Command analytics for the configured reporting window.
+
+  <ResponseField name="command_usage.top_commands" type="array">
+    Array of `{ command_name, usage_count }` objects sorted by usage descending.
+  </ResponseField>
+  <ResponseField name="command_usage.total_commands_24h" type="number">Commands executed in the last 24 hours.</ResponseField>
+  <ResponseField name="command_usage.period_days" type="number">The rolling window used for `top_commands`, in days.</ResponseField>
+</ResponseField>
+
+<ResponseField name="infrastructure" type="object" required>
+  Database and pool health.
+
+  <ResponseField name="infrastructure.database_up" type="boolean">Whether the database connection pool is healthy.</ResponseField>
+  <ResponseField name="infrastructure.pool_size" type="number">Current `asyncpg` pool size.</ResponseField>
+  <ResponseField name="infrastructure.checked_at" type="string">ISO 8601 timestamp of the last infrastructure probe.</ResponseField>
+</ResponseField>
+
+<ResponseField name="agent_sessions" type="object">
+  Aggregate `/agent` session observability. Present only when `ALPHAPY_AGENTS_ENABLED=true`. Does **not** include message content.
+
+  <ResponseField name="agent_sessions.enabled" type="boolean">Whether the agents feature gate is on.</ResponseField>
+  <ResponseField name="agent_sessions.active_sessions" type="number">Sessions with `status = active` right now.</ResponseField>
+  <ResponseField name="agent_sessions.started_24h" type="number">Sessions started in the last 24 hours.</ResponseField>
+  <ResponseField name="agent_sessions.completed_24h" type="number">Sessions completed in the last 24 hours.</ResponseField>
+  <ResponseField name="agent_sessions.active_origin_discord" type="number">Active sessions started from Discord.</ResponseField>
+  <ResponseField name="agent_sessions.active_origin_app" type="number">Active sessions started from the Innersync App.</ResponseField>
+</ResponseField>
+
+<ResponseField name="premium_metrics" type="object">
+  Premium guard cache and check observability.
+
+  <ResponseField name="premium_metrics.premium_checks_total" type="number">Total premium checks performed.</ResponseField>
+  <ResponseField name="premium_metrics.premium_checks_core_api" type="number">Checks resolved by the Core API.</ResponseField>
+  <ResponseField name="premium_metrics.premium_checks_local" type="number">Checks resolved from local DB/cache.</ResponseField>
+  <ResponseField name="premium_metrics.premium_cache_hits" type="number">In-memory cache hits for user-level premium status.</ResponseField>
+  <ResponseField name="premium_metrics.premium_cache_size" type="number">Current user-level premium cache entry count.</ResponseField>
+  <ResponseField name="premium_metrics.premium_transfers_count" type="number">Premium transfers between guilds recorded.</ResponseField>
+  <ResponseField name="premium_metrics.premium_guild_cache_size" type="number">Current guild-level premium cache entry count.</ResponseField>
+  <ResponseField name="premium_metrics.premium_guild_cache_hits" type="number">Guild-level cache hits for `guild_has_premium()` calls.</ResponseField>
+  <ResponseField name="premium_metrics.premium_guild_cache_misses" type="number">Guild-level cache misses for `guild_has_premium()` calls.</ResponseField>
+</ResponseField>
+
+<ResponseField name="cache_metrics" type="object">
+  Additional in-memory cache observability including automod rule caches and engagement feature-flag caches. Keys follow the pattern `<cache_name>_cache_size`, `<cache_name>_cache_hits`, and `<cache_name>_cache_misses`.
+</ResponseField>
+
+### Example response (abbreviated)
+
+```json
+{
+  "bot": {
+    "version": "3.6.0",
+    "codename": "Lifecycle Manager",
+    "online": true,
+    "latency_ms": 45.2,
+    "uptime_seconds": 3600,
+    "uptime_human": "1 hour",
+    "commands_loaded": 30,
+    "guilds": []
+  },
+  "gpt": {
+    "current_model": "grok-3",
+    "success_count": 100,
+    "error_count": 2,
+    "average_latency_ms": 1200,
+    "total_tokens_session": 5000,
+    "last_success_time": "2026-01-21T12:00:00Z",
+    "last_error_time": "2026-01-21T12:05:00Z",
+    "last_error_type": "RateLimitError: ..."
+  },
+  "command_usage": {
+    "top_commands": [
+      { "command_name": "add_reminder", "usage_count": 45 },
+      { "command_name": "ticket", "usage_count": 30 }
+    ],
+    "total_commands_24h": 150,
+    "period_days": 7
+  },
+  "infrastructure": {
+    "database_up": true,
+    "pool_size": 5,
+    "checked_at": "2026-01-21T12:00:00Z"
+  },
+  "agent_sessions": {
+    "enabled": true,
+    "active_sessions": 2,
+    "started_24h": 5,
+    "completed_24h": 3,
+    "active_origin_discord": 1,
+    "active_origin_app": 1
+  },
+  "premium_metrics": {
+    "premium_checks_total": 120,
+    "premium_cache_hits": 200,
+    "premium_cache_size": 25,
+    "premium_guild_cache_hits": 90,
+    "premium_guild_cache_misses": 12
+  }
+}
+```
+
+---
+
+## GET /top-commands
+
+Returns command usage totals for a configurable lookback window. Use this endpoint to build leaderboard widgets or track command adoption trends without fetching the full metrics payload.
+
+<CodeGroup>
+```bash cURL — all guilds, last 7 days
+curl -H "Authorization: Bearer <token>" \
+  https://your-bot-url/top-commands
+```
+
+```bash cURL — single guild, last 30 days, top 5
+curl -H "Authorization: Bearer <token>" \
+  "https://your-bot-url/top-commands?guild_id=123456789&days=30&limit=5"
+```
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="guild_id" type="string">
+  Discord snowflake. Filters results to a specific guild. Omit to aggregate across all guilds.
+</ParamField>
+
+<ParamField query="days" type="number" default="7">
+  Lookback window in days.
+</ParamField>
+
+<ParamField query="limit" type="number" default="10">
+  Maximum number of commands to return. Commands are sorted by usage count descending before the limit is applied.
+</ParamField>
+
+### Response fields
+
+<ResponseField name="commands" type="object" required>
+  Object mapping command names to their usage counts within the requested window. Example: `{ "add_reminder": 45, "ticket": 30 }`.
+</ResponseField>
+
+<ResponseField name="period_days" type="number" required>
+  The `days` value used for this query, echoed back for confirmation.
+</ResponseField>
+
+<ResponseField name="guild_id" type="string | null" required>
+  The `guild_id` filter applied, or `null` if queried globally.
+</ResponseField>
+
+<ResponseField name="total_commands" type="number" required>
+  Number of distinct command names returned.
+</ResponseField>
+
+### Example response
+
+```json
+{
+  "commands": {
+    "add_reminder": 45,
+    "ticket": 30,
+    "reminder_list": 20
+  },
+  "period_days": 7,
+  "guild_id": null,
+  "total_commands": 3
+}
+```
+
+<Tip>
+  Combine `GET /top-commands` with `GET /api/dashboard/metrics` `command_usage.total_commands_24h` to display both a rolling leaderboard and a real-time daily counter side by side.
+</Tip>

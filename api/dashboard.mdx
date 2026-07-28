@@ -1,0 +1,531 @@
+---
+title: "Dashboard Configuration API for Guild Management"
+sidebarTitle: "Dashboard API"
+description: "HTTP endpoints for managing guild settings, onboarding, and automod rules via the Alphapy dashboard API. Requires Supabase JWT with guild admin permissions."
+---
+
+The Dashboard Configuration API is the backbone of the Mind web dashboard. It exposes endpoints for reading and writing guild-level settings, managing onboarding flows, creating automod rules, and querying operational logs. All endpoints require a Supabase JWT, and most require the authenticated user to have Discord admin permissions in the target guild. Write requests are rate-limited to **10 requests per minute** per IP.
+
+## Authentication
+
+```
+Authorization: Bearer <supabase_jwt>
+```
+
+Alphapy verifies the JWT, then checks that your linked Discord account holds admin permissions in the requested guild. Requests that fail the admin check return `403`.
+
+<Note>
+  After dashboard writes to guild settings or automod rules, Alphapy provides dedicated cache-invalidation endpoints (`POST /api/dashboard/{guild_id}/settings/invalidate-cache` and `POST /api/dashboard/{guild_id}/automod/invalidate-cache`) to flush the bot's in-memory snapshots immediately. The Mind dashboard calls these automatically after each save.
+</Note>
+
+---
+
+## Guild Settings
+
+### GET /api/dashboard/{guild_id}/settings
+
+Retrieve all configuration settings for a guild, organized by category.
+
+<CodeGroup>
+```bash cURL
+curl -H "Authorization: Bearer <token>" \
+  https://your-bot-url/api/dashboard/123456789/settings
+```
+</CodeGroup>
+
+<ParamField path="guild_id" type="string" required>
+  Discord guild snowflake.
+</ParamField>
+
+The response is an object keyed by settings category. Each category contains its own set of fields:
+
+| Category | Description |
+|---|---|
+| `system` | Log channels, rules channel, log level |
+| `reminders` | Reminder feature toggle, default channel, mention permissions |
+| `embedwatcher` | Announcement embed parsing, reminder offsets, GPT fallback |
+| `gpt` | AI model selection and temperature |
+| `invites` | Invite tracking and announcement templates |
+| `gdpr` | GDPR acceptance flow toggle and channel |
+| `automod` | Automod master toggle, log channel, DB logging |
+| `onboarding` | Onboarding mode, completion role, join role |
+| `ticketbot` | Ticket category, staff/escalation roles, auto-close thresholds |
+| `verification` | Verified role, category, vision model |
+| `engagement` | Challenges, awards, streaks, badges, OG claims |
+| `growth` | Growth check-in channel |
+
+### Response fields
+
+<ResponseField name="system" type="object">
+  Log channels, rules channel, and log level for the guild.
+</ResponseField>
+<ResponseField name="reminders" type="object">
+  Reminder feature toggle, default channel, and mention permission settings.
+</ResponseField>
+<ResponseField name="embedwatcher" type="object">
+  Embed parsing configuration, reminder offset minutes, and GPT fallback toggle.
+</ResponseField>
+<ResponseField name="gpt" type="object">
+  AI model name (e.g. `"grok-3"`) and temperature setting.
+</ResponseField>
+<ResponseField name="automod" type="object">
+  Automod master enable flag, log channel, and database logging toggle.
+</ResponseField>
+<ResponseField name="onboarding" type="object">
+  Onboarding mode, completion role, and join role IDs.
+</ResponseField>
+<ResponseField name="ticketbot" type="object">
+  Ticket category, staff role, escalation role, and auto-close threshold settings.
+</ResponseField>
+<ResponseField name="verification" type="object">
+  Verified role, verification category, and vision model selection.
+</ResponseField>
+
+### Example response (abbreviated)
+
+```json
+{
+  "system": {
+    "log_channel_id": 123456789,
+    "rules_channel_id": 987654321,
+    "log_level": "verbose"
+  },
+  "reminders": {
+    "enabled": true,
+    "default_channel_id": 111222333,
+    "allow_everyone_mentions": false
+  },
+  "automod": {
+    "enabled": false,
+    "log_channel_id": 123456789,
+    "log_actions": true,
+    "log_to_database": true
+  },
+  "onboarding": {
+    "enabled": true,
+    "mode": "rules_with_questions",
+    "completion_role_id": 123456789,
+    "join_role_id": 987654321
+  }
+}
+```
+
+---
+
+### PATCH /api/dashboard/{guild_id}/settings
+
+Update settings for one category within a guild. Supply the category name and a partial settings object containing only the fields you want to change.
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://your-bot-url/api/dashboard/123456789/settings \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category": "reminders",
+    "settings": {
+      "default_channel_id": "444555666",
+      "allow_everyone_mentions": false
+    }
+  }'
+```
+</CodeGroup>
+
+<ParamField path="guild_id" type="string" required>
+  Discord guild snowflake.
+</ParamField>
+
+<ParamField body="category" type="string" required>
+  The settings category to update (e.g. `"reminders"`, `"automod"`, `"onboarding"`).
+</ParamField>
+
+<ParamField body="settings" type="object" required>
+  Partial settings object. Only the keys you include are updated; unspecified keys retain their current values.
+</ParamField>
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "Updated reminders settings"
+}
+```
+
+---
+
+### GET /api/dashboard/{guild_id}/settings/history
+
+Retrieve the audit log of settings changes for a guild. Useful for reviewing what changed, when, and by whom.
+
+<CodeGroup>
+```bash cURL
+curl -H "Authorization: Bearer <token>" \
+  "https://your-bot-url/api/dashboard/123456789/settings/history?scope=reminders&limit=20"
+```
+</CodeGroup>
+
+<ParamField path="guild_id" type="string" required>
+  Discord guild snowflake.
+</ParamField>
+
+<ParamField query="scope" type="string">
+  Filter by settings category, e.g. `"reminders"`.
+</ParamField>
+
+<ParamField query="key" type="string">
+  Filter by a specific settings key within the category, e.g. `"default_channel_id"`.
+</ParamField>
+
+<ParamField query="limit" type="number" default="50">
+  Maximum number of history records to return.
+</ParamField>
+
+### Example response
+
+```json
+[
+  {
+    "id": 1,
+    "scope": "reminders",
+    "key": "default_channel_id",
+    "old_value": "111222333",
+    "new_value": "444555666",
+    "changed_by": 123456789,
+    "changed_at": "2026-01-21T12:00:00Z",
+    "change_type": "updated"
+  }
+]
+```
+
+---
+
+### POST /api/dashboard/{guild_id}/settings/rollback/{history_id}
+
+Roll back a specific setting to its value before the change recorded in `history_id`. Useful for reverting accidental misconfigurations.
+
+<CodeGroup>
+```bash cURL
+curl -X POST \
+  https://your-bot-url/api/dashboard/123456789/settings/rollback/1 \
+  -H "Authorization: Bearer <token>"
+```
+</CodeGroup>
+
+<ParamField path="guild_id" type="string" required>
+  Discord guild snowflake.
+</ParamField>
+
+<ParamField path="history_id" type="number" required>
+  ID of the history record to roll back, from `GET .../settings/history`.
+</ParamField>
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "Rolled back reminders.default_channel_id to previous value"
+}
+```
+
+---
+
+## Auto-Moderation Rules
+
+### GET /api/dashboard/{guild_id}/automod/rules
+
+List all automod rules configured for a guild.
+
+<CodeGroup>
+```bash cURL
+curl -H "Authorization: Bearer <token>" \
+  https://your-bot-url/api/dashboard/123456789/automod/rules
+```
+</CodeGroup>
+
+<ParamField path="guild_id" type="string" required>
+  Discord guild snowflake.
+</ParamField>
+
+### Response fields
+
+<ResponseField name="[].id" type="number" required>
+  Unique integer rule ID.
+</ResponseField>
+<ResponseField name="[].guild_id" type="number" required>
+  Discord guild snowflake this rule belongs to.
+</ResponseField>
+<ResponseField name="[].rule_type" type="string" required>
+  Rule category: `spam`, `content`, `mentions`, `caps`, `duplicate`, `regex`, or `ai`.
+</ResponseField>
+<ResponseField name="[].name" type="string" required>
+  Human-readable rule name.
+</ResponseField>
+<ResponseField name="[].enabled" type="boolean" required>
+  Whether the rule is currently active.
+</ResponseField>
+<ResponseField name="[].config" type="object" required>
+  Rule-specific configuration object.
+</ResponseField>
+<ResponseField name="[].action_type" type="string" required>
+  Action taken on violation: `delete`, `warn`, `mute`, `timeout`, or `ban`.
+</ResponseField>
+<ResponseField name="[].action_config" type="object" required>
+  Action-specific parameters.
+</ResponseField>
+<ResponseField name="[].severity" type="number">
+  Severity level 1–5.
+</ResponseField>
+<ResponseField name="[].is_premium" type="boolean">
+  Whether this rule requires a premium subscription.
+</ResponseField>
+<ResponseField name="[].created_at" type="string">
+  ISO 8601 creation timestamp.
+</ResponseField>
+<ResponseField name="[].updated_at" type="string">
+  ISO 8601 last-updated timestamp.
+</ResponseField>
+
+### Example response
+
+```json
+[
+  {
+    "id": 1,
+    "guild_id": 123456789,
+    "rule_type": "content",
+    "name": "No Bad Words",
+    "enabled": true,
+    "config": {
+      "content_type": "bad_words",
+      "words": ["spam", "curse"]
+    },
+    "action_type": "warn",
+    "action_config": {
+      "message": "Please watch your language!"
+    },
+    "severity": 1,
+    "created_by": 987654321,
+    "created_at": "2026-01-21T12:00:00Z",
+    "updated_at": "2026-01-21T12:00:00Z",
+    "is_premium": false
+  }
+]
+```
+
+---
+
+### POST /api/dashboard/{guild_id}/automod/rules
+
+Create a new automod rule. The `rule_type` and `config` shape depend on the type of rule you want to create.
+
+<CodeGroup>
+```bash cURL — link filter
+curl -X POST https://your-bot-url/api/dashboard/123456789/automod/rules \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rule_type": "content",
+    "name": "No Links",
+    "enabled": true,
+    "config": {
+      "content_type": "links",
+      "allow_links": false,
+      "whitelist": ["discord.com"],
+      "blacklist": ["spam.com"]
+    },
+    "action_type": "delete",
+    "action_config": {},
+    "severity": 2
+  }'
+```
+
+```bash cURL — spam detection
+curl -X POST https://your-bot-url/api/dashboard/123456789/automod/rules \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rule_type": "spam",
+    "name": "Message Flood",
+    "enabled": true,
+    "config": { "max_messages": 5, "window_seconds": 10 },
+    "action_type": "timeout",
+    "action_config": { "duration_minutes": 10 },
+    "severity": 3
+  }'
+```
+</CodeGroup>
+
+<ParamField path="guild_id" type="string" required>
+  Discord guild snowflake.
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  Human-readable rule name shown in the dashboard.
+</ParamField>
+
+<ParamField body="rule_type" type="string" required>
+  One of: `spam`, `content`, `mentions`, `caps`, `duplicate`, `regex` *(premium)*, `ai` *(premium)*.
+</ParamField>
+
+<ParamField body="enabled" type="boolean" required>
+  Whether the rule is active immediately after creation.
+</ParamField>
+
+<ParamField body="config" type="object" required>
+  Rule-specific configuration object. Shape varies by `rule_type` — see rule type reference below.
+</ParamField>
+
+<ParamField body="action_type" type="string" required>
+  Action taken when the rule triggers. One of: `delete`, `warn`, `mute` *(premium)*, `timeout` *(premium)*, `ban` *(premium)*.
+</ParamField>
+
+<ParamField body="action_config" type="object" required>
+  Action-specific parameters (e.g. `{ "message": "..." }` for `warn`, `{ "duration_minutes": 10 }` for `timeout`).
+</ParamField>
+
+<ParamField body="severity" type="number">
+  Severity level 1–5. Used for sorting and reporting.
+</ParamField>
+
+### Response
+
+Returns the created rule object with its assigned `id`, `created_at`, and `updated_at`.
+
+---
+
+## Onboarding
+
+### GET /api/dashboard/{guild_id}/onboarding/questions
+
+Retrieve all onboarding questions configured for a guild.
+
+<CodeGroup>
+```bash cURL
+curl -H "Authorization: Bearer <token>" \
+  https://your-bot-url/api/dashboard/123456789/onboarding/questions
+```
+</CodeGroup>
+
+### Response fields
+
+<ResponseField name="[].id" type="number" required>
+  Unique integer question ID.
+</ResponseField>
+<ResponseField name="[].question" type="string" required>
+  Question text displayed to the member during onboarding.
+</ResponseField>
+<ResponseField name="[].question_type" type="string" required>
+  Input type: `text`, `email`, `select`, or `multiselect`.
+</ResponseField>
+<ResponseField name="[].options" type="array">
+  Array of `{ label, value }` option objects. Present for `select` and `multiselect` types.
+</ResponseField>
+<ResponseField name="[].required" type="boolean" required>
+  Whether the member must answer this question to complete onboarding.
+</ResponseField>
+<ResponseField name="[].enabled" type="boolean" required>
+  Whether this question is currently shown in the onboarding flow.
+</ResponseField>
+<ResponseField name="[].step_order" type="number" required>
+  Display order for this question within the onboarding flow.
+</ResponseField>
+
+### Example response
+
+```json
+[
+  {
+    "id": 1,
+    "question": "What is your trading experience?",
+    "question_type": "select",
+    "options": [{ "label": "Beginner", "value": "beginner" }],
+    "required": true,
+    "enabled": true,
+    "step_order": 1
+  }
+]
+```
+
+Question types available: `text`, `email`, `select`, `multiselect`.
+
+---
+
+## Operational Logs
+
+### GET /api/dashboard/logs
+
+Retrieve operational event logs for a guild — reconnects, disconnects, settings changes, command errors, and onboarding failures. Global bot events (e.g. `BOT_RECONNECT`, `BOT_DISCONNECT`) are included for any guild request.
+
+<CodeGroup>
+```bash cURL
+curl -H "Authorization: Bearer <token>" \
+  "https://your-bot-url/api/dashboard/logs?guild_id=123456789&limit=25"
+```
+
+```bash cURL — filtered by event type
+curl -H "Authorization: Bearer <token>" \
+  "https://your-bot-url/api/dashboard/logs?guild_id=123456789&event_types=BOT_RECONNECT,BOT_DISCONNECT"
+```
+</CodeGroup>
+
+<ParamField query="guild_id" type="string" required>
+  Discord guild snowflake. You must have admin permissions in this guild.
+</ParamField>
+
+<ParamField query="limit" type="number" default="50">
+  Maximum log entries to return. Hard cap of `100`.
+</ParamField>
+
+<ParamField query="event_types" type="string">
+  Comma-separated list of event type filters, e.g. `"BOT_RECONNECT,SETTINGS_CHANGED"`.
+</ParamField>
+
+### Event types reference
+
+| Event type | Description |
+|---|---|
+| `BOT_READY` | Bot startup complete |
+| `BOT_RECONNECT` | Reconnected and resynced commands; includes `synced` and `skipped` counts |
+| `BOT_DISCONNECT` | Bot disconnected from Discord |
+| `GUILD_SYNC` | Per-guild command sync; includes `sync_type`: `first_ready` / `reconnect` / `guild_join` |
+| `ONBOARDING_ERROR` | Onboarding failure — no rules configured, role assignment failed, or member not found |
+| `SETTINGS_CHANGED` | Settings change via command or API; includes `action` and `source` |
+| `COG_ERROR` | Slash command error; includes command name, user ID, and error type |
+
+### Response fields
+
+<ResponseField name="logs" type="array" required>
+  Array of log event objects.
+
+  <ResponseField name="logs[].timestamp" type="string">ISO 8601 timestamp of the event.</ResponseField>
+  <ResponseField name="logs[].event_type" type="string">Event type string (see table below).</ResponseField>
+  <ResponseField name="logs[].guild_id" type="number | null">Guild the event belongs to, or `null` for global bot events.</ResponseField>
+  <ResponseField name="logs[].message" type="string">Human-readable event description.</ResponseField>
+  <ResponseField name="logs[].details" type="object">Structured event-specific metadata (e.g. `synced`, `skipped` for reconnect events).</ResponseField>
+</ResponseField>
+
+### Example response
+
+```json
+{
+  "logs": [
+    {
+      "timestamp": "2026-02-10T21:30:00Z",
+      "event_type": "BOT_RECONNECT",
+      "guild_id": null,
+      "message": "Reconnect phase complete: commands synced",
+      "details": { "synced": 5, "skipped": 0 }
+    }
+  ]
+}
+```
+
+### Error codes
+
+| Code | Meaning |
+|---|---|
+| `401` | Missing or invalid JWT |
+| `403` | You do not have admin access to the specified guild |
+| `404` | Guild not found or bot not in guild |

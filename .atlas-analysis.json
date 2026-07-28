@@ -1,0 +1,135 @@
+{
+  "projectType": "saas",
+  "projectName": "Innersync • Alphapy",
+  "projectDescription": "Alphapy is a multi-guild Discord bot by Innersync that powers community operations, AI-assisted growth check-ins, personal reflection agents, moderation, ticketing, and premium features for Discord servers.",
+  "theme": "luma",
+  "primaryColor": "#6366F1",
+  "lightColor": "#EEF2FF",
+  "darkColor": "#1E1B4B",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "innersync-id"
+            ]
+          },
+          {
+            "group": "Bot Commands",
+            "pages": [
+              "commands/core",
+              "commands/ai-features",
+              "commands/reminders",
+              "commands/tickets",
+              "commands/engagement",
+              "commands/moderation"
+            ]
+          },
+          {
+            "group": "Alphapy Agents",
+            "pages": [
+              "agents/overview",
+              "agents/using-agents",
+              "agents/safety"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/server-setup",
+              "configuration/features",
+              "configuration/google-drive"
+            ]
+          },
+          {
+            "group": "Premium",
+            "pages": [
+              "premium/plans",
+              "premium/features"
+            ]
+          },
+          {
+            "group": "Legal",
+            "pages": [
+              "legal/terms-of-service",
+              "legal/privacy-policy",
+              "legal/legal-info"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview",
+              "api/authentication"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/health",
+              "api/metrics",
+              "api/agents",
+              "api/reminders",
+              "api/dashboard",
+              "api/webhooks"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "AI-powered growth check-ins with Grok LLM coaching and reflection history",
+    "Personal reflection agents with multi-turn sessions and persistent memory",
+    "Full-featured moderation suite including AI automod rules and verification",
+    "Community engagement tools: challenges, badges, OG claims, weekly awards",
+    "Ticket support system with AI summaries and private channel management",
+    "Customizable onboarding flows with rules, questions, and role assignment",
+    "Recurring and event-based reminder scheduling with image support (Premium)",
+    "Innersync ID linking Discord accounts to a unified cross-platform identity",
+    "Premium tier with higher AI limits, Mockingbird mode, and image reminders",
+    "HTTP API for dashboard integrations, agent sessions, and webhook automation"
+  ],
+  "publicApiSurface": [
+    "GET /api/health",
+    "GET /api/health/history",
+    "GET /api/dashboard/metrics",
+    "GET /api/dashboard/{guild_id}/settings",
+    "PATCH /api/dashboard/{guild_id}/settings",
+    "GET /api/dashboard/{guild_id}/automod/rules",
+    "POST /api/dashboard/{guild_id}/automod/rules",
+    "GET /api/dashboard/{guild_id}/onboarding/questions",
+    "POST /api/agents/sessions",
+    "GET /api/agents/sessions/active",
+    "POST /api/agents/sessions/{id}/turns",
+    "POST /api/agents/sessions/{id}/complete",
+    "GET /api/reminders/{user_id}",
+    "POST /webhooks/app-reflections",
+    "POST /webhooks/discord-link",
+    "POST /webhooks/premium-invalidate",
+    "/growthcheckin",
+    "/growthhistory",
+    "/agent start",
+    "/agent continue",
+    "/agent end",
+    "/agent status",
+    "/link",
+    "/unlink",
+    "/profile",
+    "/add_reminder",
+    "/reminder_list",
+    "/ticket",
+    "/premium",
+    "/my_premium"
+  ]
+}

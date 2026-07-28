@@ -1,0 +1,74 @@
+---
+title: "How to Use Alphapy Reflection Agents in Discord"
+sidebarTitle: "Using Agents"
+description: "Start, continue, and end multi-turn AI reflection sessions with Alphapy's /agent commands. Requires linking your Innersync account first."
+---
+
+The `/agent` command set gives you direct access to your personal reflection agent inside Discord. Sessions are multi-turn — you open one, exchange as many messages as you need, and close it when you're done. Everything happens ephemerally, meaning only you can see the responses. This guide walks you through every step, from setup to wrapping up a session.
+
+## Before you start
+
+Two things must be in place before your first session:
+
+- **Link your Innersync account.** Run `/link` and complete the short browser flow to connect your Discord identity. This is a one-time step that unlocks all agent features.
+- **Confirm agents are enabled in your server.** Run `/agent list`. If you see the reflection agent listed, you're ready. If the command returns nothing or an error, ask a server admin to enable agents via `/config agents toggle true`.
+
+## Starting a session
+
+<Steps>
+  <Step title="Run /agent start">
+    Type `/agent start` in any channel where Alphapy is active. Add an optional `message` parameter to give your agent a specific focus right away — this is the most effective way to get a sharp, relevant first response.
+
+    ```
+    /agent start message:"What patterns do you see in my recent reflections?"
+    ```
+
+    If you leave `message` blank, the agent will open the session with a general check-in prompt based on your available context.
+
+    **Energy check-in (if prompted):** If your energy level hasn't been recorded in the last 24 hours, you'll see a quick ephemeral prompt before the session starts — five buttons labelled 1 through 5, plus a **Skip** option. Tap the number that matches how you're feeling right now, or hit Skip to proceed without updating. This helps the agent tailor its tone and suggestions to your current state.
+  </Step>
+  <Step title="Read the agent's response">
+    The agent's reply appears as an ephemeral embed — **visible only to you**, not to other server members or admins. Take your time reading it. The response draws on your shared reflections, engagement data, and any context from previous sessions.
+  </Step>
+  <Step title="Continue the conversation with /agent continue">
+    To keep the conversation going, run `/agent continue` with your follow-up. The `message` parameter is required here.
+
+    ```
+    /agent continue message:"Can you say more about the avoidance pattern you mentioned?"
+    ```
+
+    You can run `/agent continue` as many times as you like. Each turn builds on the full conversation history from this session. Continue turns do **not** count toward your daily session limit.
+  </Step>
+  <Step title="End the session with /agent end">
+    When you're ready to close the session, run `/agent end`. The agent will synthesize the key insights from your conversation into a closing summary, then mark the session as complete. Your ephemeral messages are cleared and the session is saved to your agent history for future context.
+  </Step>
+</Steps>
+
+## Checking your session
+
+Use `/agent status` at any point during an active session to see when it started and how many turns it contains. This is handy if you've lost track of a session or want a quick recap before continuing.
+
+<Note>
+  You can only have **one active session at a time**. If you try to run `/agent start` while a session is already open, you'll be blocked with an ephemeral reminder. Run `/agent continue` to pick up where you left off, or `/agent end` to close it first before opening a new one.
+</Note>
+
+## Tips for better sessions
+
+<Tip>
+  Get more from every session with these habits:
+
+  - **Give your agent a focus question in `/agent start`.** Open-ended prompts like "What am I avoiding?" or "What progress have I made on my goal this week?" lead to much richer first responses than starting with no message.
+  - **Do a `/growthcheckin` before starting a session.** The more recent shared reflections you have, the more context your agent can draw from. A fresh check-in right before an agent session gives you the best results.
+  - **Use `/agent continue` to go deeper before ending.** If the agent surfaces something interesting, follow it. Don't end a session after a single exchange — the multi-turn format is designed for exploration.
+  - **End every session with `/agent end`.** The closing summary is stored and informs future sessions. Leaving sessions open indefinitely means you miss out on that accumulated context.
+</Tip>
+
+## Command reference
+
+| Command | Description | Parameters |
+|---------|-------------|------------|
+| `/agent list` | See available agents | — |
+| `/agent start` | Begin a new reflection session | `message` (optional) |
+| `/agent continue` | Add a follow-up turn to your active session | `message` (required) |
+| `/agent end` | Close your session and receive a summary | — |
+| `/agent status` | View your active session's start time and turn count | — |

@@ -1,0 +1,159 @@
+---
+title: "Support Ticketing System Commands & Setup"
+sidebarTitle: "Tickets"
+description: "Create support tickets with /ticket, post a self-serve panel, manage statuses, view stats, export data, and configure the ticketing system for your server."
+---
+
+Alphapy's ticketing system gives your members a clean, private way to reach your support team — no public threads, no cluttered channels. Each ticket creates a dedicated private channel accessible only to the member and your staff role. Staff manage tickets through interactive buttons rather than slash commands, keeping the workflow simple and accessible to non-technical team members. Admins handle configuration, stats, and exports through a dedicated set of slash commands.
+
+---
+
+## Creating a Ticket
+
+### `/ticket`
+
+Open a new support ticket. Alphapy creates a private channel in the configured ticket category, visible only to you and members with the staff role. Inside the channel, your staff will see **Claim** and **Close** buttons to manage the ticket — no additional slash commands required.
+
+<ParamField path="description" type="string" required>
+  A short description of your issue. This appears in the ticket channel and helps staff triage quickly.
+</ParamField>
+
+**Permissions:** Everyone
+
+**Example:**
+
+```
+/ticket description:"I can't access the trading resources channel after purchasing."
+```
+
+#### Staff workflow
+
+Once a ticket channel is created, staff interact with it through two persistent buttons:
+
+| Button | Action |
+|---|---|
+| **Claim** | Assigns the ticket to the staff member who clicks it, signalling they're handling it. |
+| **Close** | Closes the ticket and archives the channel. |
+
+<Tip>
+  Encourage staff to always **Claim** a ticket before responding — it prevents duplicate responses and gives members confidence someone is actively helping them.
+</Tip>
+
+---
+
+## Ticket Panel
+
+### `/ticket_panel_post`
+
+Post a persistent "Create ticket" panel embed in any channel. Members click the **Create ticket** button to open a new ticket without needing to know the `/ticket` command.
+
+**Permissions:** Owner / Admin
+
+**Example:**
+
+```
+/ticket_panel_post
+```
+
+Place this in a dedicated `#support` or `#help` channel so members always know where to go.
+
+<Note>
+  The panel works indefinitely — you only need to post it once. If you change your ticket configuration (category, staff role), existing panels automatically use the new settings.
+</Note>
+
+---
+
+## Managing Tickets (Admins)
+
+### `/ticket_stats`
+
+View ticket statistics for your server. After running the command, click the time-range buttons to see data for the last **7 days**, **30 days**, or **all time**.
+
+**Permissions:** Owner / Admin
+
+**Example:**
+
+```
+/ticket_stats
+```
+
+---
+
+### `/ticket_status`
+
+Manually update the status of any ticket. Use this to keep your queue organised or to flag tickets that are waiting on a response.
+
+<ParamField path="ticket_id" type="string" required>
+  The ID of the ticket to update.
+</ParamField>
+
+<ParamField path="status" type="string" required>
+  The new status. Choose from: `open`, `claimed`, `waiting_for_user`, `escalated`, `closed`, `archived`.
+</ParamField>
+
+**Permissions:** Owner / Admin
+
+**Example:**
+
+```
+/ticket_status ticket_id:42 status:waiting_for_user
+/ticket_status ticket_id:42 status:escalated
+/ticket_status ticket_id:42 status:closed
+```
+
+---
+
+## Exporting Ticket Data
+
+### `/export_tickets`
+
+Download all ticket data as a CSV file. Useful for reporting, audits, or tracking support trends over time.
+
+**Permissions:** Owner / Admin
+
+**Example:**
+
+```
+/export_tickets
+```
+
+Alphapy responds with a CSV file attachment containing all ticket records.
+
+---
+
+## Configuration
+
+Set up and tune the ticketing system using the `/ticketbot` command group.
+
+| Command | Description |
+|---|---|
+| `/ticketbot show` | Display the current ticketing configuration for this server. |
+| `/ticketbot set_category #category` | Set the Discord category where ticket channels are created. Leave empty to clear. |
+| `/ticketbot set_staff_role @role` | Set the role that has access to all ticket channels. Leave empty to clear. |
+| `/ticketbot set_escalation_role @role` | Set the role tagged when a ticket is escalated. Leave empty to clear. |
+
+**Permissions:** Administrator (all `/ticketbot` configuration commands)
+
+**Examples:**
+
+```
+/ticketbot set_category #Support Tickets
+/ticketbot set_staff_role @Support Team
+/ticketbot set_escalation_role @Senior Staff
+/ticketbot show
+```
+
+<Steps>
+  <Step title="Create a ticket category in Discord">
+    In your server, create a category (e.g., "Support Tickets") and set its permissions so only staff can see it by default. Alphapy will override permissions per-channel when creating tickets.
+  </Step>
+  <Step title="Configure the category and roles">
+    Run `/ticketbot set_category`, `/ticketbot set_staff_role`, and optionally `/ticketbot set_escalation_role`.
+  </Step>
+  <Step title="Post the ticket panel">
+    Run `/ticket_panel_post` in your `#support` channel so members can open tickets with one click.
+  </Step>
+  <Step title="Test the flow">
+    Open a test ticket as a regular member, verify the private channel is created correctly, and confirm staff can see it.
+  </Step>
+</Steps>

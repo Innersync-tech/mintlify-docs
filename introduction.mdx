@@ -1,0 +1,56 @@
+---
+title: "Alphapy: Discord Bot for Growth & Community"
+sidebarTitle: "Introduction"
+description: "Alphapy by Innersync is a multi-guild Discord bot with AI growth check-ins, personal agents, moderation, ticketing, and engagement tools."
+---
+
+**Innersync • Alphapy** is a multi-guild Discord bot built for communities that take personal growth and community health seriously. It combines AI-powered growth check-ins, personal reflection agents backed by Grok, structured onboarding, moderation, support ticketing, and community engagement tools — all configurable per server. Whether you run a trading community, a coaching group, or a creator server, Alphapy provides the operational backbone and the AI layer to help your members grow.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="AI Growth Check-ins" icon="brain">
+    Members run `/growthcheckin` to log goals, obstacles, and emotions. Grok responds with personalised coaching, references past patterns, and optionally posts an anonymous summary to a shared channel.
+  </Card>
+  <Card title="Personal Reflection Agents" icon="robot">
+    Linked members access multi-turn AI reflection sessions via `/agent start`, `/agent continue`, and `/agent end`. Agents use opt-in shared reflections and learned patterns — never encrypted journal data.
+  </Card>
+  <Card title="Community Engagement" icon="trophy">
+    Gamify your server with message-count challenges, weekly awards, badge grants, OG claims, and invite tracking. Every engagement feature is independently toggled per guild.
+  </Card>
+  <Card title="Moderation & Automod" icon="shield">
+    Configure spam rules, bad-words filters, link controls, mention caps, duplicate detection, regex rules, and AI-powered content policies. All violations are logged to your designated channel.
+  </Card>
+  <Card title="Support Ticketing" icon="ticket">
+    Members open tickets with `/ticket` and get a private channel shared with your staff role. Staff claim and close tickets using in-channel buttons. Admins can view statistics and export CSV records.
+  </Card>
+  <Card title="Premium Tier" icon="star">
+    Upgrade to unlock unlimited AI check-ins, regex and AI automod rules, image reminders, Mockingbird mode (sharper Grok tone), and advanced verification features.
+  </Card>
+</CardGroup>
+
+## What you can do with Alphapy
+
+- **Onboard new members** with a multi-step flow including rules acknowledgement, custom questions (select, multi-select, text, email), and an automatic completion role.
+- **Run GDPR-compliant agreement flows** so members explicitly accept your server's privacy terms before gaining access.
+- **Automate reminders and live-session announcements** on a recurring schedule, with optional images (Premium) and embed-watching to auto-schedule event reminders.
+- **Query an AI knowledge base** using `/learn_topic` to search local markdown files and Google Drive content with a Grok-generated explanation.
+- **Generate social captions** for your community's content pipeline with `/create_caption`.
+- **Export data** — tickets, onboarding responses, and FAQ entries — as CSV files for reporting and compliance.
+- **Manage custom commands** with trigger-based automated responses supporting variables like `{user}`, `{server}`, and `{random:a|b|c}`.
+
+## The Innersync ecosystem
+
+Alphapy is one part of the broader Innersync platform. Understanding the three services helps you make the most of the integration:
+
+| Service | Role |
+|---------|------|
+| **Alphapy** | The Discord bot — commands, agents, moderation, ticketing, and engagement all live here |
+| **App** | The web dashboard — encrypted journaling, Grok chat, onboarding analytics, and agent memory settings |
+| **Core** | The identity control plane — manages Innersync ID, cross-platform user profiles, and the Discord link flow |
+
+When a member runs `/link` in Discord, Alphapy calls Core to start a link session, the member completes the flow in the App, and Core notifies Alphapy via a signed webhook. From that point on, Alphapy, Core, and the App all share the same user identity — enabling the agent features and cross-platform preferences.
+
+<Note>
+  Ready to add Alphapy to your server? Head to the [Quickstart guide](/quickstart) to invite the bot and complete first-time setup in under 10 minutes.
+</Note>

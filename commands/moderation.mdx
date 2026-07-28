@@ -1,0 +1,462 @@
+---
+title: "Moderation, Automod & Verification Commands"
+sidebarTitle: "Moderation"
+description: "Configure automod rules, AI-powered payment verification, onboarding flows, custom auto-responses, invite tracking, and GDPR compliance tools for your server."
+---
+
+Alphapy gives server admins a comprehensive moderation toolkit — from rule-based auto-moderation and AI-powered payment verification to structured onboarding flows, dynamic custom commands, invite tracking, and built-in GDPR compliance tools. Each system is independently configurable so you can enable only what your community needs.
+
+---
+
+## Auto-Moderation
+
+Alphapy's automod engine evaluates every message against your configured rules and takes automatic action — deleting the message, warning the member, muting them, timing them out, or banning them — without requiring manual intervention.
+
+### Enabling Automod
+
+```
+/automod toggle true
+/automod set_log_channel #mod-logs
+```
+
+### `/automod status`
+
+Check whether automod is active, how many rules are configured, and your Premium status.
+
+**Permissions:** Administrator
+
+### `/automod show`
+
+Display all current automod settings for the server.
+
+### `/automod rules`
+
+List every configured automod rule with its ID, name, type, action, and enabled status.
+
+---
+
+### Adding Rules
+
+All `action` parameters accept: `delete`, `warn`, `mute`, `timeout`, or `ban`.
+
+#### `/automod add_spam_rule`
+
+Trigger when a user sends too many messages within a time window.
+
+<ParamField path="name" type="string" required>
+  A unique name for this rule.
+</ParamField>
+
+<ParamField path="max_messages" type="integer">
+  Maximum messages allowed in the window before the rule triggers.
+</ParamField>
+
+<ParamField path="window_seconds" type="integer">
+  The time window in seconds.
+</ParamField>
+
+<ParamField path="action" type="string">
+  Action to take: `delete`, `warn`, `mute`, `timeout`, `ban`.
+</ParamField>
+
+**Example:**
+
+```
+/automod add_spam_rule name:"Anti-spam" max_messages:5 window_seconds:10 action:timeout
+```
+
+---
+
+#### `/automod add_badwords_rule`
+
+Block messages containing specific words or phrases.
+
+<ParamField path="name" type="string" required>
+  A unique name for this rule.
+</ParamField>
+
+<ParamField path="words" type="string" required>
+  Comma-separated list of prohibited words or phrases.
+</ParamField>
+
+<ParamField path="action" type="string">
+  Action to take: `delete`, `warn`, `mute`, `timeout`, `ban`.
+</ParamField>
+
+**Example:**
+
+```
+/automod add_badwords_rule name:"No slurs" words:"word1,word2,phrase three" action:delete
+```
+
+---
+
+#### `/automod add_links_rule`
+
+Control which links members can post.
+
+<ParamField path="name" type="string" required>
+  A unique name for this rule.
+</ParamField>
+
+<ParamField path="allow_links" type="boolean">
+  Whether to allow links by default. Set to `false` to block all links except whitelisted domains.
+</ParamField>
+
+<ParamField path="whitelist" type="string">
+  Comma-separated domains to always allow (e.g., `discord.com,youtube.com`).
+</ParamField>
+
+<ParamField path="blacklist" type="string">
+  Comma-separated domains to always block.
+</ParamField>
+
+<ParamField path="action" type="string">
+  Action to take.
+</ParamField>
+
+**Example:**
+
+```
+/automod add_links_rule name:"Link filter" allow_links:false whitelist:"discord.com,youtube.com" action:delete
+```
+
+---
+
+#### `/automod add_mentions_rule`
+
+Limit the number of user mentions per message.
+
+<ParamField path="name" type="string" required>A unique name for this rule.</ParamField>
+<ParamField path="max_mentions" type="integer">Maximum @mentions allowed per message.</ParamField>
+<ParamField path="action" type="string">Action to take.</ParamField>
+
+**Example:**
+
+```
+/automod add_mentions_rule name:"Mention limit" max_mentions:5 action:warn
+```
+
+---
+
+#### `/automod add_caps_rule`
+
+Flag messages that are excessively capitalised.
+
+<ParamField path="name" type="string" required>A unique name for this rule.</ParamField>
+<ParamField path="min_length" type="integer">Minimum message length before the rule applies.</ParamField>
+<ParamField path="max_ratio" type="number">Maximum allowed ratio of uppercase characters (e.g., `0.7` = 70%).</ParamField>
+<ParamField path="action" type="string">Action to take.</ParamField>
+
+**Example:**
+
+```
+/automod add_caps_rule name:"No all-caps" min_length:10 max_ratio:0.8 action:warn
+```
+
+---
+
+#### `/automod add_duplicate_rule`
+
+Detect members repeatedly sending the same message.
+
+<ParamField path="name" type="string" required>A unique name for this rule.</ParamField>
+<ParamField path="max_duplicates" type="integer">Number of identical messages allowed before triggering.</ParamField>
+<ParamField path="action" type="string">Action to take.</ParamField>
+
+**Example:**
+
+```
+/automod add_duplicate_rule name:"No copy-paste spam" max_duplicates:3 action:mute
+```
+
+---
+
+#### `/automod add_regex_rule` *(Premium)*
+
+Match messages against a custom regular expression pattern.
+
+<ParamField path="name" type="string" required>A unique name for this rule.</ParamField>
+<ParamField path="patterns" type="string" required>One or more regex patterns, comma-separated.</ParamField>
+<ParamField path="action" type="string">Action to take.</ParamField>
+
+**Example:**
+
+```
+/automod add_regex_rule name:"Phone numbers" patterns:"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b" action:delete
+```
+
+---
+
+#### `/automod add_ai_rule` *(Premium)*
+
+Use AI to evaluate messages against a natural-language policy. Set a threshold to control sensitivity.
+
+<ParamField path="name" type="string" required>A unique name for this rule.</ParamField>
+<ParamField path="policy" type="string" required>A plain-English description of what the rule should catch (e.g., "Messages promoting financial scams").</ParamField>
+<ParamField path="action" type="string">Action to take.</ParamField>
+<ParamField path="threshold" type="number">Confidence threshold between `0.5` and `1.0`. Default: `0.7`. Higher values = fewer false positives.</ParamField>
+
+**Example:**
+
+```
+/automod add_ai_rule name:"Scam detection" policy:"Messages that promote get-rich-quick schemes or request financial details" action:delete threshold:0.75
+```
+
+---
+
+### Managing Rules
+
+| Command | Description |
+|---|---|
+| `/automod edit_rule <rule_id> [fields...]` | Edit any field of an existing rule. Supports autocomplete for `rule_id`. |
+| `/automod delete_rule <rule_id>` | Permanently delete a rule. Supports autocomplete. |
+| `/automod set_rule_enabled <rule_id> true\|false` | Enable or disable a rule without deleting it. Supports autocomplete. |
+| `/automod set_severity <rule_id> <1–10>` | Set the rule's priority (higher = processed first). Supports autocomplete. |
+| `/automod logs [limit] [user_id] [rule_id] [action] [days]` | Browse recent automod violation logs filtered by any combination of parameters. |
+
+---
+
+## Verification
+
+Alphapy's AI-powered verification flow checks payment screenshots automatically — reducing admin workload while maintaining high accuracy.
+
+### `/verification_panel_post`
+
+Post a **Start verification** button panel in any channel. When a member clicks the button, the bot creates a private `verify-*` channel visible only to that member and your staff role.
+
+**Permissions:** Owner / Admin
+
+**Example:**
+
+```
+/verification_panel_post
+```
+
+#### Verification flow
+
+<Steps>
+  <Step title="Member clicks Start verification">
+    A private verification channel is created for the member.
+  </Step>
+  <Step title="Member submits their payment screenshot">
+    The member uploads their payment proof in the private channel.
+  </Step>
+  <Step title="AI reviews the screenshot">
+    Alphapy uses a vision AI model to check the screenshot against your configured reference image, payment age limit, and context prompt.
+  </Step>
+  <Step title="Auto-approve or flag for manual review">
+    If the AI is confident, it assigns the verified role automatically. If uncertain, it posts a **Manual review required** embed with **Approve** and **Reject** buttons for your reviewer role. Rejecting opens a modal where you can enter an optional reason shown to the member.
+  </Step>
+</Steps>
+
+---
+
+### `/verification_close`
+
+Neutrally close a verification channel without approving or rejecting. Use this to clean up abandoned or stale verification attempts.
+
+**Permissions:** Owner / Admin (must be used inside a verification channel)
+
+---
+
+### Verification Configuration
+
+| Command | Description |
+|---|---|
+| `/verification show` | Display the current verification settings. |
+| `/verification set_verified_role @role` | Role assigned to members after successful verification. |
+| `/verification set_category #category` | Discord category where verification channels are created. |
+| `/verification set_vision_model <model>` | Vision-capable AI model to use for screenshot analysis. |
+| `/verification set_ai_prompt_context <text>` | Extra context for the AI — describe what a valid payment screenshot looks like for your community. |
+| `/verification set_reviewer_role @role` | Role tagged when the AI flags a submission for manual review. Leave empty to clear. |
+| `/verification set_max_payment_age <days>` | Maximum age of an accepted payment screenshot in days (1–365). Default: **35 days**. |
+| `/verification set_reference_image <image>` | Upload a reference payment screenshot for the AI to compare against. |
+| `/verification reset_reference_image` | Remove the current reference screenshot. |
+
+**Permissions:** Administrator (all `/verification` configuration commands)
+
+---
+
+## Onboarding
+
+Onboarding guides new members through your server rules and collects responses to any intake questions you configure — before they gain full access.
+
+### Onboarding Modes
+
+| Mode | Behaviour |
+|---|---|
+| `Disabled` | Onboarding is inactive. |
+| `Rules Only` | Members read and acknowledge your rules, then receive the completion role. |
+| `Rules + Questions` | Members acknowledge rules and then answer your configured questions. |
+| `Questions Only` | Members answer questions only (no rules panel). |
+
+### `/onboarding panel_post`
+
+Post the onboarding panel with a **Start** button in the specified channel. Members click to begin their onboarding flow.
+
+<ParamField path="channel" type="channel">
+  The channel where the panel is posted. Defaults to the current channel.
+</ParamField>
+
+**Permissions:** Administrator
+
+---
+
+### Onboarding Configuration
+
+| Command | Description |
+|---|---|
+| `/onboarding show` | Display the current onboarding configuration. |
+| `/onboarding toggle true\|false` | Enable or disable the onboarding module. |
+| `/onboarding set_mode <mode>` | Set the onboarding mode (see table above). |
+| `/onboarding set_role @role` | Role assigned on onboarding completion. |
+| `/onboarding set_join_role @role` | Temporary role assigned when a member joins; removed after onboarding or verification completes. |
+| `/onboarding add_rule <order> <title> <description>` | Add a rule to the rules panel. Optionally include `thumbnail_url` and `image_url`. |
+| `/onboarding delete_rule <order>` | Remove a rule at the given position. |
+| `/onboarding reset_rules` | Clear all configured rules. |
+| `/onboarding add_question <step> <question> [type] [required]` | Add an intake question at a specific step position. |
+| `/onboarding delete_question <step>` | Remove the question at a step position. |
+| `/onboarding reset_questions` | Clear all configured questions. |
+| `/onboarding reorder` | Open a modal to reorder questions by step number. |
+
+**Question types:** `select` (single choice), `multiselect` (multiple choice), `text` (free text), `email` (validated email address).
+
+**Permissions:** Administrator (all `/onboarding` configuration commands)
+
+**Example — setting up a rules + questions flow:**
+
+```
+/onboarding toggle true
+/onboarding set_mode "Rules + Questions"
+/onboarding add_rule order:1 title:"Be respectful" description:"Treat all members with respect. No harassment, hate speech, or personal attacks."
+/onboarding add_question step:1 question:"How did you hear about us?" type:select required:true
+/onboarding set_role @Member
+/onboarding panel_post channel:#start-here
+```
+
+---
+
+## Custom Commands
+
+Custom commands let you define automated text responses triggered by specific message patterns — no coding required. Build an FAQ bot, create shortcut commands, or set up rotating random responses.
+
+### `/cc add`
+
+Create a new custom command.
+
+<ParamField path="name" type="string" required>
+  A unique slug for this command (e.g., `hello`, `schedule`, `rules`).
+</ParamField>
+
+<ParamField path="trigger_type" type="string" required>
+  How to match the trigger: `exact`, `starts_with`, `contains`, or `regex`.
+</ParamField>
+
+<ParamField path="trigger" type="string" required>
+  The text or regex pattern to match (max 200 characters). Invalid regex patterns are rejected at creation time.
+</ParamField>
+
+<ParamField path="response" type="string" required>
+  The response to send (max 1,900 characters). Supports dynamic variables (see below).
+</ParamField>
+
+<ParamField path="case_sensitive" type="boolean">
+  Match the trigger case-sensitively. Default: `false`.
+</ParamField>
+
+<ParamField path="delete_trigger" type="boolean">
+  Delete the message that triggered the response. Default: `false`.
+</ParamField>
+
+<ParamField path="reply_to_user" type="boolean">
+  Reply directly to the triggering message instead of sending a plain message. Default: `true`.
+</ParamField>
+
+**Permissions:** Administrator
+
+**Limit:** Maximum **50** custom commands per server.
+
+#### Response variables
+
+| Variable | Output |
+|---|---|
+| `{user}` | Mentions the member who triggered the command. |
+| `{user.name}` | The member's display name. |
+| `{server}` | The server name. |
+| `{channel}` | Mentions the current channel. |
+| `{uses}` | How many times this command has been triggered. |
+| `{random:a\|b\|c}` | A random pick from the pipe-delimited options. |
+
+**Examples:**
+
+```
+/cc add name:"welcome" trigger_type:contains trigger:"just joined" response:"Welcome to the server, {user}! 👋 Check out {channel} to get started."
+
+/cc add name:"motivation" trigger_type:exact trigger:"!motivate" response:"{random:You've got this! 💪|Keep pushing forward! 🚀|One step at a time. 🎯}"
+
+/cc add name:"rules-link" trigger_type:starts_with trigger:"!rules" response:"Here are the server rules: [#rules channel link]" delete_trigger:true
+```
+
+---
+
+### Managing Custom Commands
+
+| Command | Description |
+|---|---|
+| `/cc list` | List all custom commands — name, trigger type, trigger preview, use count, and enabled status. |
+| `/cc view <name>` | Show the full details of a specific command including trigger, response, and options. |
+| `/cc edit <name>` | Open a modal to edit the trigger and response of an existing command. |
+| `/cc delete <name>` | Delete a command (shows a confirmation button before deleting). |
+| `/cc toggle <name>` | Enable or disable a command without deleting it. |
+
+**Permissions:** Administrator (all `/cc` commands)
+
+---
+
+## Invites & GDPR
+
+### Invite Tracking
+
+Track which members are bringing new people into your server and recognise your top inviters.
+
+| Command | Description |
+|---|---|
+| `/invites show` | Display the current invite tracking configuration. |
+| `/invites toggle true\|false` | Enable or disable invite tracking. |
+| `/invites set_channel #channel` | Channel where invite announcements are posted. |
+| `/invites set_template with\|without <template>` | Set the announcement template for joins **with** an identifiable inviter or **without** one. |
+| `/inviteleaderboard` | Display the server invite leaderboard. |
+| `/setinvites @user <count>` | Manually set a member's invite count. |
+| `/resetinvites @user` | Reset a member's invite count to 0. |
+
+**Permissions:** Administrator (configuration); Everyone (`/inviteleaderboard`)
+
+---
+
+### GDPR Compliance
+
+Post a GDPR agreement embed that members must accept before receiving a designated role — useful for communities with legal obligations around data processing.
+
+| Command | Description |
+|---|---|
+| `/gdpr show` | Display the current GDPR settings. |
+| `/gdpr toggle true\|false` | Enable or disable the GDPR feature. |
+| `/gdpr set_channel #channel` | Channel where the GDPR document embed is posted. |
+| `/gdpr set_acceptance_role @role` | Role assigned automatically when a member clicks **I Agree**. |
+| `/gdpr post` | Post and pin the GDPR agreement embed in the configured channel. |
+
+**Permissions:** Administrator (all `/gdpr` commands)
+
+**Example:**
+
+```
+/gdpr toggle true
+/gdpr set_channel #legal
+/gdpr set_acceptance_role @Agreed to Terms
+/gdpr post
+```
+
+<Warning>
+  Once posted, the GDPR embed is pinned to the channel. If you need to update the document, re-run `/gdpr post` — members will need to re-accept if you require ongoing consent.
+</Warning>

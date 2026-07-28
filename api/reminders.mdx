@@ -1,0 +1,288 @@
+---
+title: "Reminder Management REST API Reference"
+sidebarTitle: "Reminders API"
+description: "CRUD endpoints for user reminders via the Alphapy REST API. Authenticated by Supabase JWT — only access your own reminders."
+---
+
+The Reminder Management API lets you create, read, update, and delete scheduled reminders for a user. Reminders can be one-off or recurring (repeating on specified days of the week), and they fire as Discord messages in a configured channel. All endpoints authenticate via Supabase JWT and enforce strict ownership — you can only access reminders that belong to your own user account.
+
+<Warning>
+  User identity is derived from the verified JWT claims only. The `user_id` path parameter and any `user_id` in the request body **must match** your JWT's `sub` claim (your Innersync UUID). Alphapy resolves that UUID to a Discord snowflake via `alphapy_discord_links` — if your Discord account is not linked, all reminder endpoints return `403` with guidance to run `/link` in Discord.
+</Warning>
+
+## Authentication
+
+Pass your Supabase JWT as a Bearer token:
+
+```
+Authorization: Bearer <supabase_jwt>
+```
+
+Your Discord account must be linked to your Innersync account. If it is not, run `/link` in any Discord server where Alphapy is present.
+
+## Idempotency
+
+`POST`, `PUT`, and `DELETE` all accept an optional `Idempotency-Key` header. If you supply the same key on a retry, Alphapy returns the cached success response instead of performing a duplicate write. Use this when you need safe retries over unreliable connections.
+
+```
+Idempotency-Key: <your-unique-key>
+```
+
+---
+
+## GET /api/reminders/{user_id}
+
+Fetch all reminders for a user. The `user_id` must match the `sub` of the JWT you provide.
+
+<CodeGroup>
+```bash cURL
+curl -H "Authorization: Bearer <token>" \
+  https://your-bot-url/api/reminders/550e8400-e29b-41d4-a716-446655440000
+```
+</CodeGroup>
+
+### Path parameters
+
+<ParamField path="user_id" type="string" required>
+  Your Innersync user UUID (the `sub` claim from your Supabase JWT). You cannot query reminders for other users.
+</ParamField>
+
+### Response
+
+Returns an array of reminder objects.
+
+<ResponseField name="[].id" type="number" required>
+  Unique integer ID for the reminder.
+</ResponseField>
+
+<ResponseField name="[].name" type="string" required>
+  Display name for the reminder, e.g. `"Weekly Meeting"`.
+</ResponseField>
+
+<ResponseField name="[].time" type="string" required>
+  Scheduled fire time in `HH:MM:SS` format (24-hour UTC), e.g. `"18:00:00"`.
+</ResponseField>
+
+<ResponseField name="[].call_time" type="string">
+  Optional pre-reminder notification time in `HH:MM:SS` format. Used when you want an early heads-up before the main event.
+</ResponseField>
+
+<ResponseField name="[].days" type="array">
+  Array of day strings (`"0"` = Monday … `"6"` = Sunday) on which the reminder fires. Empty or absent for one-off reminders.
+</ResponseField>
+
+<ResponseField name="[].message" type="string">
+  Custom message text sent when the reminder fires.
+</ResponseField>
+
+<ResponseField name="[].location" type="string">
+  Optional location string included in the reminder embed.
+</ResponseField>
+
+<ResponseField name="[].channel_id" type="number" required>
+  Discord channel snowflake where the reminder message is sent.
+</ResponseField>
+
+<ResponseField name="[].event_time" type="string | null">
+  Absolute event timestamp for one-off reminders. `null` for recurring reminders.
+</ResponseField>
+
+<ResponseField name="[].created_at" type="string" required>
+  ISO 8601 timestamp when the reminder was created.
+</ResponseField>
+
+### Example response
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Weekly Meeting",
+    "channel_id": 123456789,
+    "time": "18:00:00",
+    "call_time": "19:00:00",
+    "days": ["2"],
+    "message": "Weekly team meeting",
+    "location": "Conference Room",
+    "event_time": null,
+    "created_at": "2026-01-21T10:00:00Z"
+  }
+]
+```
+
+### Error codes
+
+| Code | Meaning |
+|---|---|
+| `401` | Missing or invalid JWT |
+| `403` | `user_id` does not match JWT `sub`, or Discord account not linked |
+| `404` | No reminders found for this user |
+
+---
+
+## POST /api/reminders
+
+Create a new reminder. The `user_id` field in the request body must match your JWT `sub`.
+
+<CodeGroup>
+```bash cURL — recurring reminder
+curl -X POST https://your-bot-url/api/reminders \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: create-standup-001" \
+  -d '{
+    "user_id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Team Standup",
+    "channel_id": 123456789,
+    "time": "09:00:00",
+    "days": ["0", "2", "4"],
+    "message": "Daily standup meeting",
+    "location": "Main Channel"
+  }'
+```
+
+```bash cURL — one-off reminder
+curl -X POST https://your-bot-url/api/reminders \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Product Launch",
+    "channel_id": 123456789,
+    "time": "14:00:00",
+    "message": "Go live!"
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="user_id" type="string" required>
+  Your Innersync UUID. Must match the JWT `sub`. Stored as the `created_by` Discord snowflake after link resolution.
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  Display name for the reminder.
+</ParamField>
+
+<ParamField body="channel_id" type="number" required>
+  Discord channel snowflake where the reminder fires.
+</ParamField>
+
+<ParamField body="time" type="string" required>
+  Fire time in `HH:MM:SS` format (24-hour UTC).
+</ParamField>
+
+<ParamField body="days" type="array">
+  Days of the week on which this reminder repeats (`"0"` = Monday through `"6"` = Sunday). Omit for a one-off reminder.
+</ParamField>
+
+<ParamField body="message" type="string">
+  Message text to send when the reminder fires.
+</ParamField>
+
+<ParamField body="location" type="string">
+  Optional location string included in the reminder embed.
+</ParamField>
+
+### Response
+
+Returns the created reminder object with its assigned `id` and `created_at` timestamp. HTTP status `201`.
+
+### Error codes
+
+| Code | Meaning |
+|---|---|
+| `400` | Invalid request body (missing required field, invalid time format, etc.) |
+| `401` | Missing or invalid JWT |
+| `403` | `user_id` does not match JWT `sub`, or Discord account not linked |
+
+---
+
+## PUT /api/reminders
+
+Update an existing reminder. Include the `id` of the reminder you want to update along with all fields (modified or unchanged). The `user_id` field must match your JWT `sub`.
+
+<CodeGroup>
+```bash cURL
+curl -X PUT https://your-bot-url/api/reminders \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: update-standup-002" \
+  -d '{
+    "id": 1,
+    "user_id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Team Standup (updated)",
+    "channel_id": 123456789,
+    "time": "09:30:00",
+    "days": ["0", "1", "2", "3", "4"],
+    "message": "Daily standup — updated time"
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="id" type="number" required>
+  ID of the reminder to update.
+</ParamField>
+
+<ParamField body="user_id" type="string" required>
+  Your Innersync UUID. Must match the JWT `sub` and the reminder's `created_by` after link resolution.
+</ParamField>
+
+All other fields are the same as `POST /api/reminders`. Include all fields you want to retain — this is a full replacement update.
+
+### Response
+
+Returns the updated reminder object.
+
+### Error codes
+
+| Code | Meaning |
+|---|---|
+| `400` | Invalid request body |
+| `401` | Missing or invalid JWT |
+| `403` | `user_id` does not match JWT `sub`, or you do not own this reminder |
+| `404` | Reminder not found |
+
+---
+
+## DELETE /api/reminders/{reminder_id}/{created_by}
+
+Permanently delete a reminder. The `created_by` path parameter must match your JWT `sub`.
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE \
+  "https://your-bot-url/api/reminders/1/550e8400-e29b-41d4-a716-446655440000" \
+  -H "Authorization: Bearer <token>" \
+  -H "Idempotency-Key: delete-reminder-1"
+```
+</CodeGroup>
+
+### Path parameters
+
+<ParamField path="reminder_id" type="number" required>
+  ID of the reminder to delete.
+</ParamField>
+
+<ParamField path="created_by" type="string" required>
+  Your Innersync UUID (JWT `sub`). Must match the reminder owner after link resolution.
+</ParamField>
+
+### Response
+
+Returns HTTP `204 No Content` on success.
+
+### Error codes
+
+| Code | Meaning |
+|---|---|
+| `401` | Missing or invalid JWT |
+| `403` | `created_by` does not match JWT `sub`, or you do not own this reminder |
+| `404` | Reminder not found |
+
+<Tip>
+  Use the `Idempotency-Key` header on delete requests when operating over unreliable networks. A second request with the same key returns the cached `204` without attempting a second delete.
+</Tip>

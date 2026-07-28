@@ -1,0 +1,110 @@
+---
+title: "Connect Google Drive to Alphapy for /learn_topic"
+sidebarTitle: "Google Drive"
+description: "Set up a Google Cloud service account to let Alphapy's /learn_topic command search your Google Drive PDFs and documents with Grok AI."
+---
+
+The `/learn_topic` command can search and summarise content directly from your Google Drive — PDFs, documents, and other files you store there — using Grok AI. To enable this, you connect a Google Cloud service account to Alphapy. The service account acts as a read-only bot user that can access exactly the Drive folder you share with it, and nothing else. This guide walks you through every step.
+
+## What you need
+
+- A Google account with access to [Google Cloud Console](https://console.cloud.google.com/)
+- A Google Drive folder containing the PDFs or documents you want `/learn_topic` to search
+- About 10 minutes
+
+<Steps>
+  <Step title="Create a Google Cloud Project">
+    1. Go to [console.cloud.google.com](https://console.cloud.google.com/).
+    2. Click the project dropdown at the top of the page (next to the Google Cloud logo).
+    3. Click **NEW PROJECT**.
+    4. Give your project a name — for example, `alphapy-drive-integration`.
+    5. Leave **Organization** empty or select your organisation, then click **CREATE**.
+    6. Once the project is created, select it from the dropdown.
+
+    <Tip>
+      Note your **Project ID** — it looks like `alphapy-drive-integration-456012` and appears under the project name. You will need it in a later step.
+    </Tip>
+  </Step>
+
+  <Step title="Enable the Google Drive API">
+    1. In the left sidebar, navigate to **APIs & Services** → **Library**.
+    2. Search for **Google Drive API**.
+    3. Click the **Google Drive API** result, then click **ENABLE**.
+    4. Wait for the API to finish enabling before continuing.
+  </Step>
+
+  <Step title="Create a Service Account">
+    1. In the left sidebar, navigate to **IAM & Admin** → **Service Accounts**.
+    2. Click **+ CREATE SERVICE ACCOUNT**.
+    3. Fill in the details:
+       - **Service account name**: `alphapy-drive-reader`
+       - **Description**: `Read-only access to Drive content for Alphapy /learn_topic`
+    4. Click **CREATE AND CONTINUE**.
+    5. On the permissions step, leave the role field **empty** — no extra IAM role is needed for Drive access. Click **CONTINUE**, then **DONE**.
+  </Step>
+
+  <Step title="Download a JSON key">
+    1. In the **Service Accounts** list, click the `alphapy-drive-reader` account you just created.
+    2. Go to the **KEYS** tab.
+    3. Click **ADD KEY** → **Create new key**.
+    4. Select **JSON** and click **CREATE**.
+    5. A `.json` file downloads automatically — store it somewhere secure. You will need it in the next step.
+
+    <Warning>
+      Never share your JSON key file in Discord, post it publicly, or commit it to a git repository. It contains a private key that grants read access to everything you share with the service account. If you lose the file or believe it has been exposed, delete the key in the Cloud Console and create a new one.
+    </Warning>
+  </Step>
+
+  <Step title="Share your Drive folder with the service account">
+    1. Open [Google Drive](https://drive.google.com) and locate the folder that contains your PDFs or documents.
+    2. Right-click the folder and click **Share**.
+    3. In the **Add people and groups** field, enter the service account email address. You can find this in Cloud Console under **IAM & Admin** → **Service Accounts** — it looks like:
+       ```
+       alphapy-drive-reader@YOUR_PROJECT_ID.iam.gserviceaccount.com
+       ```
+    4. Set the permission to **Viewer** (read-only).
+    5. Click **Send** or **Share**.
+
+    <Note>
+      Only share the specific folder you want Alphapy to search. You do not need to share your entire Drive.
+    </Note>
+  </Step>
+
+  <Step title="Add your credentials to Alphapy">
+    Contact your server operator or Alphapy deployment administrator and provide them with the downloaded JSON key file. They will add it to the bot's configuration as the `GOOGLE_CREDENTIALS_JSON` environment variable. Once this is in place, `/learn_topic` will have access to the folder you shared.
+
+    If you are self-hosting Alphapy, copy the entire contents of the JSON file and paste it as a single-line value for `GOOGLE_CREDENTIALS_JSON` in your environment configuration.
+  </Step>
+</Steps>
+
+## Testing the integration
+
+Once credentials are configured, run `/learn_topic` with any topic that relates to content in your shared Drive folder:
+
+```
+/learn_topic topic:"your topic here"
+```
+
+If the integration is working, Alphapy will return a response that draws on the documents in your Drive folder alongside Grok's general knowledge. If it only returns general AI knowledge (no Drive-sourced content), revisit the troubleshooting steps below.
+
+## Troubleshooting
+
+<Accordion title="Permission denied or 'Access denied' error">
+  The service account does not have access to the folder. Go back to Google Drive, right-click the folder, click **Share**, and confirm the service account email (ending in `.iam.gserviceaccount.com`) has **Viewer** access. Make sure you clicked **Send** to save the permission.
+</Accordion>
+
+<Accordion title="Drive API not enabled">
+  The Google Drive API is not active for your project. Go to **Google Cloud Console** → **APIs & Services** → **Library**, search for **Google Drive API**, and click **ENABLE**. Wait for it to finish, then retry.
+</Accordion>
+
+<Accordion title="Credentials error or JSON decode error">
+  The JSON key is not correctly formatted. Ensure the entire JSON content is on a single line with no extra wrapping quotes at the start or end. If you are not sure, download a fresh JSON key from the **KEYS** tab and try again.
+</Accordion>
+
+<Accordion title="Service account not found">
+  You may be looking at a different Google Cloud project. In the Cloud Console, confirm the project shown in the dropdown matches the Project ID in your service account email address. Switch to the correct project and verify the service account exists under **IAM & Admin** → **Service Accounts**.
+</Accordion>
+
+<Note>
+  Never share your JSON key file in Discord or commit it to a git repository. Store it only in environment variables (your deployment configuration). Rotate your key every 90 days as a security best practice, and delete old keys after rotating.
+</Note>

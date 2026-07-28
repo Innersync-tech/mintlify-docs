@@ -1,0 +1,70 @@
+---
+title: "Alphapy Agent Privacy & Data Safety Guide"
+sidebarTitle: "Privacy & Safety"
+description: "Learn what data Alphapy agents can access, how your reflections are protected, and how to manage your agent data and consent preferences."
+---
+
+Innersync is built on a privacy-first foundation, and Alphapy Agents are no exception. Your agent is designed to support your growth using only the information you've deliberately chosen to share — never by reaching into encrypted vaults, reading other users' data, or asking for credentials. This page explains exactly what your agent can and cannot see, how your opt-in choices work, and what controls you have over your data.
+
+## What agents can access
+
+The table below gives you a clear picture of every data category and whether your agent has access to it.
+
+| Data | Can agents see it? |
+|------|--------------------|
+| Encrypted App journals | **No** — your journals are zero-knowledge encrypted. Agents never receive or read journal content under any circumstances. |
+| Growth check-ins you've shared | **Yes** — but only reflections you explicitly chose to share via `/growthcheckin`'s share option. |
+| Your engagement streaks | **Yes** — guild-scoped streak data is available to give your agent context on your consistency. |
+| Your agent memory & session history | **Yes** — your own sessions and the memory built from them. No other user's data is ever loaded. |
+| Other users' data | **Never** — agents are strictly scoped to your own account. |
+| Your passwords or encryption keys | **Never asked, never stored** — agents will not request credentials and have no mechanism to use them. |
+
+## Your reflections are opt-in
+
+After every `/growthcheckin`, you see a share prompt with three choices:
+
+- **Share anonymously** — posts your check-in to the server's growth channel without your name or avatar.
+- **Share with my name** — posts with your display name and avatar visible.
+- **Keep private** — your reflection stays entirely private and is never used anywhere.
+
+Only reflections where you selected **Share anonymously** or **Share with my name** are ever available to your agent. If you chose **Keep private**, that reflection is not included in any agent context — ever. You make this choice individually for each check-in, so you remain in full control at all times.
+
+<Note>
+  The share prompt only appears if a server admin has configured a growth channel via `/growth set_channel`. If no growth channel is set, all check-ins remain private by default.
+</Note>
+
+## Deleting your data
+
+You can permanently delete your personal data from Alphapy at any time using the self-service GDPR command:
+
+```
+/delete_my_data
+```
+
+<Warning>
+  This action is **permanent and cannot be undone.** Running `/delete_my_data` will delete all your agent sessions, agent memory, shared reflections, and other personal records stored by Alphapy. A confirmation step will appear before anything is deleted — read it carefully before confirming.
+</Warning>
+
+This command covers your data in Alphapy's systems. If you also want to remove data from the Innersync App or Core platform, contact support for a full account deletion request.
+
+## Agent responses are always private
+
+Every response from an agent command — `/agent start`, `/agent continue`, `/agent end`, and `/agent status` — is delivered as an **ephemeral message**. This means:
+
+- Only you can see the response in Discord.
+- Server admins and moderators **cannot** read your agent conversations.
+- Other members in the channel cannot see that you received a response, let alone what it said.
+
+Your reflection sessions are between you and your agent.
+
+<Accordion title="What happens to my data when a session ends?">
+  When you run `/agent end`, Alphapy saves a distilled summary of the session's key insights to your agent memory. This summary informs future sessions so your agent can build on what you've explored. The raw turn-by-turn message history is deleted once the session is closed. The summary is anonymized to labels and insight chips — it does not store your exact words verbatim.
+</Accordion>
+
+<Accordion title="Can a server admin turn off agents for everyone?">
+  Yes. Server admins can disable agents at any time by running `/config agents toggle false`. This prevents any new sessions from starting in that guild. It does not delete your existing agent data — your memory and session history are preserved and will be available if agents are re-enabled later.
+</Accordion>
+
+<Note>
+  If you believe an agent response violated your privacy or behaved unexpectedly, contact us at **support@innersync.tech** with a description of what happened. Include the approximate time and the server name so we can investigate promptly.
+</Note>

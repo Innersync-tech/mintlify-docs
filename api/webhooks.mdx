@@ -1,0 +1,337 @@
+---
+title: "Inbound Webhook Events Reference for Alphapy"
+sidebarTitle: "Webhooks"
+description: "Configure inbound webhooks to notify Alphapy of subscription changes, Discord link events, and reflection shares. All webhooks use HMAC signature validation."
+---
+
+Alphapy accepts inbound webhooks from the Innersync Core API, GitHub Actions, and other trusted services. These webhooks keep the bot in sync with external state changes — premium subscription updates, Discord account links, user reflection shares, and legal document changes — without polling. Each endpoint expects a JSON payload and validates the request using an HMAC-SHA256 signature header.
+
+<Note>
+  Each webhook endpoint uses its own secret configured separately. See the [Configuration](/configuration/features) guide for the full list of per-feature settings.
+</Note>
+
+---
+
+## Authentication
+
+Every inbound webhook is authenticated via the `X-Webhook-Signature` header. Alphapy computes the expected signature from the raw request body and the configured per-route secret, then compares it to the value you provide using a constant-time comparison to prevent timing attacks.
+
+```
+X-Webhook-Signature: sha256=<hex_digest>
+```
+
+If the signature is missing or invalid, Alphapy returns `401`. In development environments where no secret is configured, signature validation is skipped.
+
+---
+
+## Validating webhook signatures
+
+Before you send payloads, verify that your signature computation matches what Alphapy expects. Use the following reference implementation:
+
+<CodeGroup>
+```python Python
+import hmac
+import hashlib
+
+def verify_signature(payload: bytes, signature: str, secret: str) -> bool:
+    expected = hmac.new(
+        secret.encode(),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(f"sha256={expected}", signature)
+```
+
+```typescript TypeScript
+import { createHmac, timingSafeEqual } from "crypto";
+
+function verifySignature(
+  payload: Buffer,
+  signature: string,
+  secret: string
+): boolean {
+  const expected = `sha256=${createHmac("sha256", secret)
+    .update(payload)
+    .digest("hex")}`;
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+}
+```
+</CodeGroup>
+
+Always use `hmac.compare_digest` (Python) or `timingSafeEqual` (Node.js) — never a plain string equality check.
+
+---
+
+## POST /webhooks/discord-link
+
+Triggered by Core API when a user links or unlinks their Discord account in the Innersync App. Alphapy upserts or removes the corresponding row in `alphapy_discord_links` and optionally sends the user a confirmation DM.
+
+**Secret:** `DISCORD_LINK_WEBHOOK_SECRET`
+
+<CodeGroup>
+```bash cURL — link event
+curl -X POST https://your-bot-url/webhooks/discord-link \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Signature: sha256=<computed_hmac>" \
+  -d '{
+    "event": "link",
+    "innersync_user_id": "550e8400-e29b-41d4-a716-446655440000",
+    "discord_user_id": 123456789012345678,
+    "link_source": "app_link"
+  }'
+```
+
+```bash cURL — unlink event
+curl -X POST https://your-bot-url/webhooks/discord-link \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Signature: sha256=<computed_hmac>" \
+  -d '{
+    "event": "unlink",
+    "innersync_user_id": "550e8400-e29b-41d4-a716-446655440000",
+    "discord_user_id": 123456789012345678
+  }'
+```
+</CodeGroup>
+
+### Link payload
+
+```json
+{
+  "event": "link",
+  "innersync_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "discord_user_id": 123456789012345678,
+  "link_source": "app_link"
+}
+```
+
+### Unlink payload
+
+```json
+{
+  "event": "unlink",
+  "innersync_user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "discord_user_id": 123456789012345678
+}
+```
+
+<ParamField body="event" type="string" required>
+  `"link"` or `"unlink"`. Defaults to `"link"` when omitted (legacy payloads).
+</ParamField>
+
+<ParamField body="innersync_user_id" type="string" required>
+  Innersync user UUID (Supabase `sub`).
+</ParamField>
+
+<ParamField body="discord_user_id" type="number" required>
+  Discord user snowflake.
+</ParamField>
+
+<ParamField body="link_source" type="string">
+  Optional origin string stored for audit purposes, e.g. `"app_link"`.
+</ParamField>
+
+### Responses
+
+| Status | Body | Meaning |
+|---|---|---|
+| `200` | `{ "status": "ok", "discord_user_id": "..." }` | Link or unlink succeeded |
+| `200` | `{ "status": "noop", "discord_user_id": "..." }` | No change was needed |
+| `409` | `{ "detail": "..." }` | The Discord or Innersync user is already linked to a different account |
+
+---
+
+## POST /webhooks/app-reflections
+
+Triggered when a user shares a reflection from the Innersync App via Core API. Alphapy stores the reflection in `app_reflections` (Railway) for use as Grok context in user-self flows such as `/growthcheckin` and `/agent journal_sync`. Reflection content is never used for ticket "Suggest reply" to preserve privacy.
+
+**Secret:** `APP_REFLECTIONS_WEBHOOK_SECRET`
+
+<Note>
+  Grok context only merges consent-gated sources. Railway `app_reflections` and Supabase `reflections_shared` both require an active, non-revoked row in `reflection_alphapy_consent` before they are included.
+</Note>
+
+### Payload
+
+```json
+{
+  "user_id": 123456789,
+  "reflection_id": "uuid-from-app",
+  "plaintext_content": {
+    "reflection_text": "Today I focused on staying present...",
+    "mantra": "Progress over perfection",
+    "thoughts": "I noticed tension when...",
+    "future_message": "One micro-step: finish the vault copy.",
+    "date": "2026-01-21"
+  }
+}
+```
+
+<ParamField body="user_id" type="number" required>
+  Discord snowflake for the user who shared the reflection.
+</ParamField>
+
+<ParamField body="reflection_id" type="string" required>
+  UUID assigned to this reflection in the Innersync App.
+</ParamField>
+
+<ParamField body="plaintext_content" type="object" required>
+  Structured reflection content. All sub-fields are optional except as required by the App's flow.
+</ParamField>
+
+### Response
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://your-bot-url/webhooks/app-reflections \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Signature: sha256=<computed_hmac>" \
+  -d '{
+    "user_id": 123456789,
+    "reflection_id": "uuid-from-app",
+    "plaintext_content": {
+      "reflection_text": "Today I focused on staying present...",
+      "mantra": "Progress over perfection",
+      "date": "2026-01-21"
+    }
+  }'
+```
+</CodeGroup>
+
+```json
+{ "status": "acknowledged", "reflection_id": "uuid-from-app" }
+```
+
+---
+
+## POST /webhooks/premium-invalidate
+
+Triggered by Core API when a user's premium subscription changes — new purchase, cancellation, plan upgrade or downgrade, or guild transfer. Alphapy clears the in-memory premium cache for that user so the next feature-gate check re-fetches fresh data from Core API or the database.
+
+**Secret:** `PREMIUM_INVALIDATE_WEBHOOK_SECRET`
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://your-bot-url/webhooks/premium-invalidate \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Signature: sha256=<computed_hmac>" \
+  -d '{ "user_id": 123456789, "guild_id": 987654321 }'
+```
+</CodeGroup>
+
+### Payload
+
+```json
+{
+  "user_id": 123456789,
+  "guild_id": 987654321
+}
+```
+
+<ParamField body="user_id" type="number" required>
+  Discord snowflake for the user whose premium status changed.
+</ParamField>
+
+<ParamField body="guild_id" type="number">
+  Discord guild snowflake. When omitted, Alphapy clears the premium cache for **all guilds** associated with this user.
+</ParamField>
+
+### Response
+
+```json
+{ "status": "ok" }
+```
+
+---
+
+## POST /webhooks/founder
+
+Triggered by Core API after a founder (early-bird) purchase is confirmed. Alphapy sends a welcome DM to the new founder's Discord account.
+
+**Secret:** `FOUNDER_WEBHOOK_SECRET`
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://your-bot-url/webhooks/founder \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Signature: sha256=<computed_hmac>" \
+  -d '{ "user_id": 123456789, "message": "Welcome to the founding circle!" }'
+```
+</CodeGroup>
+
+### Payload
+
+```json
+{
+  "user_id": 123456789,
+  "message": "Optional custom message to include in the DM"
+}
+```
+
+<ParamField body="user_id" type="number" required>
+  Discord snowflake for the new founder.
+</ParamField>
+
+<ParamField body="message" type="string">
+  Optional custom text appended to the founder welcome DM.
+</ParamField>
+
+### Responses
+
+| Status | Body | Meaning |
+|---|---|---|
+| `200` | `{ "status": "ok" }` | Welcome DM sent successfully |
+| `200` | `{ "status": "dm_failed" }` | User has DMs disabled — no message delivered |
+
+<Warning>
+  A `dm_failed` response is **not** an error on Alphapy's side. It means the target user has disabled direct messages from server members. Handle this gracefully in your integration.
+</Warning>
+
+---
+
+## POST /webhooks/legal-update
+
+Triggered by a GitHub Action when `docs/terms-of-service.md` or `docs/privacy-policy.md` changes on the `main` branch. Alphapy posts a formatted embed in the configured announcement channel of the main guild.
+
+**Secret:** `LEGAL_UPDATE_WEBHOOK_SECRET`
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://your-bot-url/webhooks/legal-update \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Signature: sha256=<computed_hmac>" \
+  -d '{
+    "documents": ["tos", "pp"],
+    "tos_version": "2026-03-31",
+    "pp_version": "2026-03-31"
+  }'
+```
+</CodeGroup>
+
+### Payload
+
+```json
+{
+  "documents": ["tos", "pp"],
+  "tos_version": "2026-03-31",
+  "pp_version": "2026-03-31"
+}
+```
+
+<ParamField body="documents" type="array" required>
+  Array of document keys to announce. Valid values: `"tos"` (Terms of Service), `"pp"` (Privacy Policy).
+</ParamField>
+
+<ParamField body="tos_version" type="string">
+  Effective date string for the updated Terms of Service, extracted from the document header. Format: `YYYY-MM-DD`.
+</ParamField>
+
+<ParamField body="pp_version" type="string">
+  Effective date string for the updated Privacy Policy, extracted from the document header. Format: `YYYY-MM-DD`.
+</ParamField>
+
+### Responses
+
+| Status | Body | Meaning |
+|---|---|---|
+| `200` | `{ "status": "acknowledged", "sent": "tos, pp" }` | Embed posted for the listed documents |
+| `200` | `{ "status": "skipped", "reason": "..." }` | `MAIN_GUILD_ID` not set, or no announcement channel configured |

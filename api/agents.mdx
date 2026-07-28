@@ -1,0 +1,305 @@
+---
+title: "Agent Sessions REST API for App Integration"
+sidebarTitle: "Agents API"
+description: "Start, continue, and complete Alphapy agent sessions via REST API. Requires Supabase JWT authentication and a linked Discord account."
+---
+
+The Agent Sessions API gives you programmatic access to the same guided reflection and growth sessions that Discord users access via `/agent`. You can start a session, send follow-up messages, and complete it — all over HTTP, without a Discord client. This makes it straightforward to embed agent sessions in the Innersync App or any other surface that can make authenticated REST calls.
+
+<Note>
+  The agents API is only available when the deployment has `ALPHAPY_AGENTS_ENABLED=true` set. If agents are disabled, all `/api/agents/*` routes return `503`.
+</Note>
+
+## Authentication
+
+Every agent endpoint requires two things:
+
+1. **Supabase JWT** — pass it as `Authorization: Bearer <token>`.
+2. **Linked Discord account** — your Innersync user ID must be linked to a Discord account via the `/link` command in Discord. Unlinked users receive `403`.
+
+```
+Authorization: Bearer <supabase_jwt>
+```
+
+## Rate limits
+
+Agent sessions are write-heavy; they are capped at **10 requests per minute** per IP for `POST` endpoints.
+
+<Note>
+  **Daily `/agent start` quotas by plan:**
+  - Free tier — 10 session starts per day
+  - Monthly Premium — 25 session starts per day
+  - Annual / Lifetime — unlimited
+</Note>
+
+---
+
+## POST /api/agents/sessions
+
+Start a new agent session. This is the HTTP equivalent of running `/agent start` in Discord. The response includes an opening assistant message and the new session ID you will use for subsequent turns.
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://your-bot-url/api/agents/sessions \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent": "reflection",
+    "message": "I want to work through a decision I have been putting off."
+  }'
+```
+</CodeGroup>
+
+### Request body
+
+<ParamField body="agent" type="string" required>
+  The agent type to start. Use `"reflection"` for the reflection/growth agent.
+</ParamField>
+
+<ParamField body="message" type="string">
+  Optional opening message to seed the session context. If omitted, the agent opens with its default prompt.
+</ParamField>
+
+### Response — 201 Created
+
+<ResponseField name="session_id" type="string" required>
+  UUID for this session. Use it as the `{session_id}` path parameter in turn and complete requests.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Always `"active"` on a successful start.
+</ResponseField>
+
+<ResponseField name="started_at" type="string" required>
+  ISO 8601 timestamp when the session was created.
+</ResponseField>
+
+<ResponseField name="assistant_message" type="string" required>
+  The agent's opening response.
+</ResponseField>
+
+<ResponseField name="turn_count" type="number" required>
+  Number of turns so far (will be `1` immediately after start if an opening message was provided).
+</ResponseField>
+
+<ResponseField name="messages" type="array">
+  Full message history for the session so far, when available.
+</ResponseField>
+
+### Example response
+
+```json
+{
+  "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "status": "active",
+  "started_at": "2026-01-21T12:00:00Z",
+  "assistant_message": "Let's explore that decision together. What is at the heart of it for you?",
+  "turn_count": 1,
+  "messages": [
+    {
+      "role": "user",
+      "content": "I want to work through a decision I have been putting off."
+    },
+    {
+      "role": "assistant",
+      "content": "Let's explore that decision together. What is at the heart of it for you?"
+    }
+  ]
+}
+```
+
+### Error codes
+
+| Code | Meaning |
+|---|---|
+| `401` | Missing or invalid Supabase JWT |
+| `402` | Daily session start quota exceeded for your plan |
+| `403` | Discord account not linked — run `/link` in Discord first |
+| `409` | You already have an active session for this agent; complete or abandon it before starting a new one |
+
+---
+
+## GET /api/agents/sessions/active
+
+Retrieve your current active session and its full message history. Use this to restore UI state after a page reload or app relaunch without requiring the user to restart their session.
+
+<CodeGroup>
+```bash cURL — default agent (reflection)
+curl -H "Authorization: Bearer <token>" \
+  https://your-bot-url/api/agents/sessions/active
+```
+
+```bash cURL — explicit agent type
+curl -H "Authorization: Bearer <token>" \
+  "https://your-bot-url/api/agents/sessions/active?agent=reflection"
+```
+</CodeGroup>
+
+### Query parameters
+
+<ParamField query="agent" type="string" default="reflection">
+  The agent type to check for an active session.
+</ParamField>
+
+### Response
+
+<ResponseField name="session_id" type="string" required>
+  UUID of the active session.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  `"active"` while the session is open.
+</ResponseField>
+
+<ResponseField name="started_at" type="string" required>
+  ISO 8601 timestamp when the session was started.
+</ResponseField>
+
+<ResponseField name="turn_count" type="number" required>
+  Number of turns completed so far.
+</ResponseField>
+
+<ResponseField name="turns" type="array" required>
+  Ordered array of turn objects. Each turn contains:
+
+  <ResponseField name="turns[].turn_index" type="number">Zero-based turn index.</ResponseField>
+  <ResponseField name="turns[].role" type="string">`"user"` or `"assistant"`.</ResponseField>
+  <ResponseField name="turns[].content" type="string">Message text.</ResponseField>
+</ResponseField>
+
+### Error codes
+
+| Code | Meaning |
+|---|---|
+| `401` | Missing or invalid Supabase JWT |
+| `403` | Discord account not linked |
+| `404` | No active session found for the specified agent |
+
+---
+
+## POST /api/agents/sessions/{session_id}/turns
+
+Send a follow-up message to an active session. This is the HTTP equivalent of `/agent continue`. The agent processes your message and returns its next response.
+
+<CodeGroup>
+```bash cURL
+curl -X POST \
+  https://your-bot-url/api/agents/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/turns \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "message": "I think the core issue is fear of commitment." }'
+```
+</CodeGroup>
+
+### Path parameters
+
+<ParamField path="session_id" type="string" required>
+  UUID of the active session, returned from `POST /api/agents/sessions`.
+</ParamField>
+
+### Request body
+
+<ParamField body="message" type="string" required>
+  Your follow-up message to the agent.
+</ParamField>
+
+### Response
+
+<ResponseField name="turn_index" type="number" required>
+  Zero-based index of the new assistant turn in the session history.
+</ResponseField>
+
+<ResponseField name="role" type="string" required>
+  Always `"assistant"` for this response.
+</ResponseField>
+
+<ResponseField name="content" type="string" required>
+  The agent's reply to your message.
+</ResponseField>
+
+### Example response
+
+```json
+{
+  "turn_index": 2,
+  "role": "assistant",
+  "content": "Fear of commitment makes a lot of sense here. What would feel different if you gave yourself permission to choose imperfectly?"
+}
+```
+
+### Error codes
+
+| Code | Meaning |
+|---|---|
+| `401` | Missing or invalid Supabase JWT |
+| `403` | Discord account not linked, or session belongs to a different user |
+| `404` | Session not found or already completed |
+
+---
+
+## POST /api/agents/sessions/{session_id}/complete
+
+End and archive an active session. This is the HTTP equivalent of `/agent end`. Alphapy generates a `session_insight_snapshot` summarising the session and emits a Hermit `gpt_command` event on success. Once completed, the session cannot receive new turns.
+
+<CodeGroup>
+```bash cURL
+curl -X POST \
+  https://your-bot-url/api/agents/sessions/a1b2c3d4-e5f6-7890-abcd-ef1234567890/complete \
+  -H "Authorization: Bearer <token>"
+```
+</CodeGroup>
+
+### Path parameters
+
+<ParamField path="session_id" type="string" required>
+  UUID of the active session to complete.
+</ParamField>
+
+### Response
+
+<ResponseField name="session_id" type="string" required>
+  UUID of the completed session.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Always `"completed"` on success.
+</ResponseField>
+
+<ResponseField name="completed_at" type="string" required>
+  ISO 8601 timestamp when the session was closed.
+</ResponseField>
+
+<ResponseField name="turn_count" type="number" required>
+  Total turns in the completed session.
+</ResponseField>
+
+<ResponseField name="session_insight_snapshot" type="object">
+  AI-generated summary and insight data for the session, stored for future context retrieval.
+</ResponseField>
+
+### Example response
+
+```json
+{
+  "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "status": "completed",
+  "completed_at": "2026-01-21T12:45:00Z",
+  "turn_count": 8,
+  "session_insight_snapshot": {
+    "summary": "User explored a fear of commitment around a career decision.",
+    "themes": ["commitment", "career", "self-trust"]
+  }
+}
+```
+
+### Error codes
+
+| Code | Meaning |
+|---|---|
+| `401` | Missing or invalid Supabase JWT |
+| `403` | Discord account not linked, or session belongs to a different user |
+| `404` | Session not found or already completed |
+
+<Warning>
+  Completing a session is irreversible. You cannot add turns to a completed session. If you need to continue a reflection, start a new session — previous session insight snapshots are available as context.
+</Warning>
