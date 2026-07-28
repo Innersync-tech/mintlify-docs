@@ -8,12 +8,12 @@ Getting Alphapy running on your Discord server takes less than 10 minutes. This 
 
 <Steps>
   <Step title="Invite Alphapy">
-    Visit [pricing.alphapy.innersync.tech](https://pricing.alphapy.innersync.tech) and click the **Add to Discord** invite link. Select your server from the dropdown and click **Authorise**.
+    Visit [core.innersync.tech/alphapy](https://core.innersync.tech/alphapy) and click the **Add to Discord** invite link. Select your server from the dropdown and click **Authorise**.
 
     Alphapy requires the following Discord permissions to operate all features:
 
     | Permission | Why it's needed |
-    |------------|-----------------|
+    | --- | --- |
     | Manage Channels | Creates ticket and verification channels |
     | Manage Roles | Assigns onboarding, verified, and badge roles |
     | Send Messages / Embed Links | Posts reminders, check-ins, and log embeds |
@@ -24,11 +24,10 @@ Getting Alphapy running on your Discord server takes less than 10 minutes. This 
       You must have the **Manage Server** permission in the target Discord server to complete the authorisation flow.
     </Tip>
   </Step>
-
   <Step title="Run the setup wizard">
     In any channel where you have admin access, run:
 
-    ```
+    ```text
     /config start
     ```
 
@@ -49,41 +48,40 @@ Getting Alphapy running on your Discord server takes less than 10 minutes. This 
       You can re-run `/config start` at any time to update these settings. Each feature also has its own top-level command group (e.g. `/automod`, `/onboarding`, `/verification`) for granular control.
     </Note>
   </Step>
-
   <Step title="Configure key features">
     After the wizard, run these commands to activate the most commonly used features:
 
     **Set your log channel** (if you skipped it in the wizard):
 
-    ```
+    ```text
     /system set_log_channel #logs
     ```
 
     **Enable reminders** so members and admins can schedule recurring announcements:
 
-    ```
+    ```text
     /reminders toggle true
     ```
 
     **Assign your staff role** so ticket channels are visible to your moderation team:
 
-    ```
+    ```text
     /ticketbot set_staff_role @Staff
     ```
 
     Run `/system show`, `/reminders show`, and `/ticketbot show` at any point to review your current settings for each feature area.
   </Step>
-
   <Step title="Link your Innersync account">
     Run `/link` in any channel on your server (or in DMs with Alphapy). The bot replies with an **ephemeral** message — visible only to you — containing a personalised browser URL.
 
-    ```
+    ```text
     /link
     ```
 
     Open the URL in your browser and sign in to the Innersync App (or create a free account). Once you complete the flow, Core sends a confirmation **DM** to your Discord account and updates Alphapy automatically. The entire linking process typically takes under a minute.
 
     Linking your account unlocks:
+
     - `/agent` commands — personal multi-turn AI reflection sessions
     - Your global Innersync profile (display name, avatar) visible via `/profile`
     - Cross-platform preferences (locale, timezone) shared between the App and Alphapy
@@ -92,11 +90,10 @@ Getting Alphapy running on your Discord server takes less than 10 minutes. This 
       Encourage your members to run `/link` as well — each person links their own Discord account individually, and it only takes about 60 seconds.
     </Tip>
   </Step>
-
   <Step title="Try your first growth check-in">
     Run the following command in any channel where Alphapy is active:
 
-    ```
+    ```text
     /growthcheckin
     ```
 
@@ -120,12 +117,15 @@ Getting Alphapy running on your Discord server takes less than 10 minutes. This 
   <Card title="Bot Commands" icon="slash" href="/commands/core">
     Explore the complete slash command reference, including moderation, engagement, AI, and admin commands.
   </Card>
+
   <Card title="Alphapy Agents" icon="robot" href="/agents/overview">
     Learn how to enable and use the multi-turn personal reflection agents for linked members.
   </Card>
+
   <Card title="Configuration" icon="sliders" href="/configuration">
     Deep-dive into per-feature settings for automod, onboarding, verification, reminders, and more.
   </Card>
+
   <Card title="Premium" icon="star" href="/premium/plans">
     Compare tiers and unlock unlimited AI usage, advanced automod rules, and premium engagement tools.
   </Card>
