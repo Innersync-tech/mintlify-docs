@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "Innersync • Alphapy",
+  "name": "Innersync Docs",
   "theme": "luma",
   "colors": {
     "primary": "#6366F1",
@@ -11,7 +11,7 @@
   "navbar": {
     "primary": {
       "type": "github",
-      "href": "https://github.com/Innersync-tech/docs"
+      "href": "https://github.com/Innersync-tech/mintlify-docs"
     }
   },
   "navigation": {
@@ -23,7 +23,14 @@
             "group": "Get Started",
             "pages": [
               "introduction",
-              "quickstart",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Platform",
+            "pages": [
+              "app/index",
+              "core/index",
               "innersync-id"
             ]
           },
@@ -66,7 +73,8 @@
             "pages": [
               "legal/terms-of-service",
               "legal/privacy-policy",
-              "legal/legal-info"
+              "legal/legal-info",
+              "legal/pricing"
             ]
           }
         ]
