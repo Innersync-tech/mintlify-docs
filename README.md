@@ -17,7 +17,7 @@ mint dev
 
 ## Sync
 
-Alphapy product docs sync from `alphapy/docs/` via GitHub Actions into `synced/alphapy/` (see alphapy workflow `sync-docs-to-mintlify.yml`).
+Alphapy product docs are **pulled** into `synced/alphapy/` by this repo (`.github/workflows/pull-alphapy-docs.yml`) using `GITHUB_TOKEN`. Hourly cron + `workflow_dispatch`; Alphapy may send `repository_dispatch` (`sync-alphapy-docs`) for an immediate pull.
 
 ## Agent rule
 
